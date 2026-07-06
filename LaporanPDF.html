@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body{font-family:Arial,sans-serif;font-size:12px;color:#22303f;padding:20px;}
+  h1{font-size:17px;color:#1e3a5f;margin-bottom:2px;}
+  h2{font-size:14px;margin-top:22px;color:#1e3a5f;border-bottom:1.5px solid #1e3a5f;padding-bottom:4px;}
+  .muted{color:#6b7a8d;}
+  table{width:100%;border-collapse:collapse;margin-top:8px;}
+  th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;font-size:11.5px;}
+  th{background:#1e3a5f;color:#fff;}
+  .bar-track{background:#eee;height:10px;border-radius:6px;overflow:hidden;width:180px;display:inline-block;vertical-align:middle;}
+  .bar-fill{height:100%;background:#2a9d8f;}
+  .siswa-block{page-break-inside:avoid;margin-bottom:14px;border:1px solid #ddd;border-radius:6px;padding:10px;}
+  .header-info{display:flex;justify-content:space-between;margin-bottom:6px;}
+</style>
+</head>
+<body>
+
+<h1>LAPORAN HASIL ANALISIS KEBUTUHAN PESERTA DIDIK (AKPD)</h1>
+<p class="muted"><?= settings.namaSekolah ?> &middot; Tahun Ajaran <?= settings.tahunAjaran ?></p>
+<p class="muted">Kelas: <b><?= rekap.kelas ?></b> &middot; Guru BK: <?= settings.namaGuruBK ?></p>
+
+<h2>Ringkasan Kelas</h2>
+<table>
+  <tr><th>Total Siswa</th><th>Sudah Mengisi</th><th>Belum Mengisi</th></tr>
+  <tr><td><?= rekap.jumlahSiswa ?></td><td><?= rekap.sudahIsi ?></td><td><?= rekap.belumIsi ?></td></tr>
+</table>
+
+<h2>Kebutuhan Terbesar (Urutan Prioritas)</h2>
+<table>
+  <tr><th>#</th><th>Aspek</th><th>Persentase</th><th></th></tr>
+  <? for(var i=0;i<rekap.kebutuhanTertinggi.length;i++){ var k = rekap.kebutuhanTertinggi[i]; ?>
+  <tr>
+    <td><?= i+1 ?></td><td><?= k.aspek ?></td><td><?= k.persen ?>%</td>
+    <td><span class="bar-track"><span class="bar-fill" style="width:<?= k.persen ?>%"></span></span></td>
+  </tr>
+  <? } ?>
+</table>
+
+<h2>Detail Hasil per Siswa</h2>
+<? for(var s=0;s<detailSiswa.length;s++){ var d = detailSiswa[s]; if(!d.sudahIsi) continue; ?>
+<div class="siswa-block">
+  <div class="header-info"><b><?= d.siswa.Nama ?></b><span class="muted"><?= d.siswa.Kelas ?></span></div>
+  <table>
+    <tr><th>Aspek</th><th>Persentase Kebutuhan</th></tr>
+    <? for(var a=0;a<d.urutanPrioritas.length;a++){ var asp = d.urutanPrioritas[a]; ?>
+    <tr><td><?= asp ?></td><td><?= d.skor[asp].persen ?>%</td></tr>
+    <? } ?>
+  </table>
+  <p style="margin-top:6px;"><b>Kesimpulan:</b> <?= d.kesimpulan ?></p>
+</div>
+<? } ?>
+
+<p class="muted" style="margin-top:24px;">Dicetak otomatis oleh TeduhBK &middot; <?= new Date().toLocaleDateString('id-ID') ?></p>
+
+</body>
+</html>
