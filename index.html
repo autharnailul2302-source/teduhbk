@@ -1959,6 +1959,33 @@ function updateOfflineBanner() {
  * STATE GLOBAL
  *************************************************************/
 let CURRENT = { role: null, id: null, nama: null, kelas: null };
+
+/*************** SESI LOGIN (biar refresh tidak balik ke halaman login) ***************/
+const SESSION_KEY = 'teduhbk_session_v1';
+function saveSession(tab){
+  try {
+    const existing = loadSession() || {};
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      role: CURRENT.role, id: CURRENT.id, nama: CURRENT.nama, kelas: CURRENT.kelas,
+      loginAs: (typeof LOGIN_ROLE !== 'undefined' ? LOGIN_ROLE : null),
+      siswaData: (typeof SISWA_DATA !== 'undefined' ? SISWA_DATA : null),
+      tab: (tab !== undefined ? tab : existing.tab) || null
+    }));
+  } catch (e) {}
+}
+function loadSession(){
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
+  catch (e) { return null; }
+}
+function clearSession(){
+  try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+}
+function saveActiveTab(tab){
+  const s = loadSession();
+  if (!s) return;
+  s.tab = tab;
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); } catch (e) {}
+}
 let HV_SISWA_LIST = [];
 let KELAS_NAMES_CACHE = [];
 
@@ -2119,9 +2146,11 @@ function doLogin(){
       if(res.role === 'SISWA'){
         CURRENT.id = res.data.id; CURRENT.nama = res.data.nama; CURRENT.kelas = res.data.kelas;
         SISWA_DATA = res.data;
+        saveSession();
         showSplashThen(()=> enterSiswaHub(res.data));
       } else {
         CURRENT.id = res.data.username; CURRENT.nama = res.data.nama;
+        saveSession();
         if(res.role === 'GURUBK') showSplashThen(enterGuruBKPortal);
         else if(res.role === 'KEPSEK') showSplashThen(enterKepsekPortal);
         else if(res.role === 'ADMIN') showSplashThen(enterAdminPortal);
@@ -2134,6 +2163,7 @@ function doLogin(){
 function logout(){
   CURRENT = { role:null, id:null, nama:null, kelas:null };
   SISWA_DATA = null;
+  clearSession();
   document.getElementById('inp-username').value='';
   document.getElementById('inp-password').value='';
   switchView('view-login');
@@ -2146,6 +2176,24 @@ google.script.run.withSuccessHandler(s=>{
   document.getElementById('school-title').textContent = s.namaSekolah;
   document.getElementById('school-sub').textContent = 'TeduhBK · ' + s.tahunAjaran;
 }).getPublicSettings();
+
+/*************** PULIHKAN SESI LOGIN SETELAH REFRESH ***************/
+window.addEventListener('DOMContentLoaded', function(){
+  const s = loadSession();
+  if(!s || !s.role) return;
+  CURRENT = { role: s.role, id: s.id, nama: s.nama, kelas: s.kelas };
+  if(s.loginAs) LOGIN_ROLE = s.loginAs;
+  if(s.role === 'SISWA'){
+    SISWA_DATA = s.siswaData;
+    showSplashThen(()=> enterSiswaHub(s.siswaData));
+  } else if(s.role === 'GURUBK'){
+    showSplashThen(()=>{ enterGuruBKPortal(); if(s.tab) gbShowTab(s.tab); });
+  } else if(s.role === 'KEPSEK'){
+    showSplashThen(enterKepsekPortal);
+  } else if(s.role === 'ADMIN'){
+    showSplashThen(()=>{ enterAdminPortal(); if(s.tab) adShowTab(s.tab); });
+  }
+});
 
 
 /*************************************************************
@@ -2445,6 +2493,7 @@ function gbShowTab(tab){
   document.querySelectorAll('#view-gurubk .tab-panel').forEach(p=>p.style.display='none');
   document.getElementById(tab).style.display='block';
   document.querySelectorAll('#view-gurubk .nav-item[data-tab]').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  saveActiveTab(tab);
   if(tab==='gb-rekap' || tab==='gb-mingguan'){
     document.getElementById('laporan-group').style.display='block';
     document.getElementById('laporan-caret').textContent='▾';
@@ -4816,6 +4865,7 @@ function adShowTab(tab){
   document.querySelectorAll('#view-admin .tab-panel').forEach(p=>p.style.display='none');
   document.getElementById(tab).style.display='block';
   document.querySelectorAll('#view-admin .nav-item[data-tab]').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  saveActiveTab(tab);
 }
 function adLoadUsers(){
   google.script.run.withSuccessHandler(list=>{
