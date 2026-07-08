@@ -209,12 +209,11 @@ tr:hover td{background:#fafbff;}
 .empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
 .empty-state .icon{font-size:44px;margin-bottom:10px;}
 
-.modal-bg{position:fixed;inset:0;background:rgba(15,20,35,.6);backdrop-filter:blur(2px);display:none;
-  align-items:center;justify-content:center;z-index:100;padding:16px;
-  transform:translateZ(0);will-change:transform;}
+.modal-bg{position:fixed;inset:0;background:rgba(15,20,35,.72);display:none;
+  align-items:center;justify-content:center;z-index:100;padding:16px;}
 .modal-bg.active{display:flex;animation:fadeIn .2s ease;}
 .modal{background:#fff;border-radius:18px;padding:26px;width:100%;max-width:460px;max-height:88vh;overflow:auto;
-  box-shadow:var(--shadow-lg);transform:translateZ(0);isolation:isolate;}
+  box-shadow:var(--shadow-lg);}
 .modal.modal-lg{max-width:760px;}
 
 .toast{position:fixed;top:18px;right:18px;background:var(--navy-dk);color:#fff;padding:13px 19px;
@@ -1086,6 +1085,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <h3>Import Program Tahunan (CSV)</h3>
     <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu Kompetensi Dasar:</p>
     <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text-progtahunan"></p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="downloadCsvTemplateFrom('csv-template-text-progtahunan','template_program_tahunan.csv')">⬇️ Unduh Template CSV</button>
     <label class="import-drop" for="csv-file-input-progtahunan">
       <div style="font-size:28px;">📄</div>
       <p class="small" style="margin-top:6px;">Klik untuk pilih file .csv, atau tempel isi CSV di bawah</p>
@@ -1134,6 +1134,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <h3>Import Program Bulanan (CSV)</h3>
     <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu materi layanan:</p>
     <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text-progbulanan"></p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="downloadCsvTemplateFrom('csv-template-text-progbulanan','template_program_bulanan.csv')">⬇️ Unduh Template CSV</button>
     <label class="import-drop" for="csv-file-input-progbulanan">
       <div style="font-size:28px;">📄</div>
       <p class="small" style="margin-top:6px;">Klik untuk pilih file .csv, atau tempel isi CSV di bawah</p>
@@ -1206,6 +1207,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <h3>Import Program Semester (CSV)</h3>
     <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu kegiatan/layanan. Kolom <b>BidangBimbingan</b> diisi gabungan huruf P/S/B/K dipisah koma (contoh: <code>P,S</code>):</p>
     <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text-progsemester"></p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="downloadCsvTemplateFrom('csv-template-text-progsemester','template_program_semester.csv')">⬇️ Unduh Template CSV</button>
     <label class="import-drop" for="csv-file-input-progsemester">
       <div style="font-size:28px;">📄</div>
       <p class="small" style="margin-top:6px;">Klik untuk pilih file .csv, atau tempel isi CSV di bawah</p>
@@ -1245,6 +1247,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <h3>Import Data Siswa (CSV)</h3>
     <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu siswa:</p>
     <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text-siswa"></p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="downloadCsvTemplateFrom('csv-template-text-siswa','template_siswa.csv')">⬇️ Unduh Template CSV</button>
     <div class="small" style="background:#fef3e2;border:1px solid #f0c869;color:#7a5300;padding:10px 12px;border-radius:8px;margin-top:8px;">
       ⚠️ <b>Catatan:</b> kolom <b>Kelas</b> harus persis sama dengan nama kelas yang sudah ada di menu Admin (contoh: <span style="font-family:monospace;">VII A</span>). Password login siswa otomatis = NIS masing-masing.
     </div>
@@ -1302,6 +1305,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <h3>Import Laporan EATL (CSV)</h3>
     <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu laporan:</p>
     <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text"></p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="downloadCsvTemplateFrom('csv-template-text','template_eatl.csv')">⬇️ Unduh Template CSV</button>
     <label class="import-drop" for="csv-file-input">
       <div style="font-size:28px;">📄</div>
       <p class="small" style="margin-top:6px;">Klik untuk pilih file .csv, atau tempel isi CSV di bawah</p>
@@ -1352,6 +1356,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <h3>Import Catatan Anekdot (CSV)</h3>
     <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu catatan:</p>
     <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text-anekdot"></p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="downloadCsvTemplateFrom('csv-template-text-anekdot','template_anekdot.csv')">⬇️ Unduh Template CSV</button>
     <div class="small" style="background:#fef3e2;border:1px solid #f0c869;color:#7a5300;padding:10px 12px;border-radius:8px;margin-top:8px;">
       ⚠️ <b>Catatan:</b> untuk kolom <b>NamaSiswa</b>, <b>Interpretasi</b>, dan <b>Rekomendasi</b> yang berisi lebih dari satu poin, pisahkan tiap poin dengan simbol <b>|</b> (garis tegak). Sistem akan otomatis memecahnya jadi baris terpisah, baik saat disimpan maupun saat diekspor ke Word.<br>
       Contoh: <span style="font-family:monospace;">Wahyu Prayogo|Irsadul Ibad|M. Rizky Mubarok</span>
@@ -1404,6 +1409,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <h3>Import Observasi (CSV)</h3>
     <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu catatan observasi:</p>
     <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text-observasi"></p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="downloadCsvTemplateFrom('csv-template-text-observasi','template_observasi.csv')">⬇️ Unduh Template CSV</button>
     <label class="import-drop" for="csv-file-input-observasi">
       <div style="font-size:28px;">📄</div>
       <p class="small" style="margin-top:6px;">Klik untuk pilih file .csv, atau tempel isi CSV di bawah</p>
@@ -1459,6 +1465,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <h3>Import Daftar Konseling (CSV)</h3>
     <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu catatan:</p>
     <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text-konseling"></p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="downloadCsvTemplateFrom('csv-template-text-konseling','template_konseling.csv')">⬇️ Unduh Template CSV</button>
     <label class="import-drop" for="csv-file-input-konseling">
       <div style="font-size:28px;">📄</div>
       <p class="small" style="margin-top:6px;">Klik untuk pilih file .csv, atau tempel isi CSV di bawah</p>
@@ -1521,6 +1528,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <h3>Import Laporan Mingguan (CSV)</h3>
     <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu kegiatan:</p>
     <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text-mingguan"></p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="downloadCsvTemplateFrom('csv-template-text-mingguan','template_laporan_mingguan.csv')">⬇️ Unduh Template CSV</button>
     <label class="import-drop" for="csv-file-input-mingguan">
       <div style="font-size:28px;">📄</div>
       <p class="small" style="margin-top:6px;">Klik untuk pilih file .csv, atau tempel isi CSV di bawah</p>
@@ -1578,6 +1586,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <h3>Import Laporan Bulanan (CSV)</h3>
     <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu kegiatan:</p>
     <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text-bulanan"></p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="downloadCsvTemplateFrom('csv-template-text-bulanan','template_laporan_bulanan.csv')">⬇️ Unduh Template CSV</button>
     <label class="import-drop" for="csv-file-input-bulanan">
       <div style="font-size:28px;">📄</div>
       <p class="small" style="margin-top:6px;">Klik untuk pilih file .csv, atau tempel isi CSV di bawah</p>
@@ -1622,6 +1631,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <h3>Import Laporan Tahunan (CSV)</h3>
     <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu kegiatan:</p>
     <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text-tahunan"></p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="downloadCsvTemplateFrom('csv-template-text-tahunan','template_laporan_tahunan.csv')">⬇️ Unduh Template CSV</button>
     <label class="import-drop" for="csv-file-input-tahunan">
       <div style="font-size:28px;">📄</div>
       <p class="small" style="margin-top:6px;">Klik untuk pilih file .csv, atau tempel isi CSV di bawah</p>
@@ -1988,6 +1998,21 @@ function saveActiveTab(tab){
 }
 let HV_SISWA_LIST = [];
 let KELAS_NAMES_CACHE = [];
+
+function downloadCsvTemplateFrom(elementId, filename){
+  const el = document.getElementById(elementId);
+  let text = el ? el.textContent.trim() : '';
+  if(!text){ showToast('Template belum termuat, coba tutup dan buka lagi form ini.', 'err'); return; }
+  // Buang catatan tambahan seperti "  (Bulan: ... )" yang kadang ditempel di baris header —
+  // biar file CSV yang diunduh cuma berisi header kolom yang bersih.
+  text = text.replace(/\s{2,}\(.*$/s, '').trim();
+  const blob = new Blob(['\ufeff' + text + '\r\n'], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 function populateKelasSelect(id){
   const sel = document.getElementById(id);
