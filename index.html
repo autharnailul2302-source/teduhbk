@@ -27,6 +27,8 @@ p{margin:0 0 8px 0;}
 .muted{color:var(--muted);}
 .small{font-size:12.5px;}
 .view{display:none;}
+.view.active{animation:viewFadeIn .45s ease;}
+@keyframes viewFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .view.active{display:block;animation:fadeIn .35s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 button{font-family:inherit;cursor:pointer;}
@@ -239,12 +241,26 @@ tr:hover td{background:#fafbff;}
 .import-drop:hover{border-color:var(--indigo);background:#eef0fb;}
 textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;
   font-size:13.5px;font-family:inherit;resize:vertical;}
+.checklist-box{width:100%;max-height:180px;overflow-y:auto;padding:10px 13px;border:1.5px solid var(--border);
+  border-radius:10px;font-size:13.5px;background:#fff;}
+.checklist-box label{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;}
+.checklist-box input[type=checkbox]{width:16px;height:16px;flex-shrink:0;}
 </style>
 
 </head>
 <body>
 
 <div id="toast" class="toast"></div>
+
+<div id="offline-banner" style="display:none;position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;
+  background:#1e293b;color:#fff;border-radius:12px;padding:12px 16px;align-items:center;justify-content:space-between;
+  gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13.5px;">
+  <span id="offline-banner-text">0 jawaban menunggu dikirim</span>
+  <button onclick="window._teduhbkSyncQueueNow && window._teduhbkSyncQueueNow()"
+    style="background:#38bdf8;color:#0b1220;border:none;border-radius:8px;padding:6px 12px;font-weight:600;cursor:pointer;white-space:nowrap;">
+    Coba kirim sekarang
+  </button>
+</div>
 
 <!-- ============ LOGIN ============ -->
 <div id="view-login" class="view active">
@@ -543,7 +559,10 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <div id="gb-siswa" class="tab-panel" style="display:none;">
       <div class="topbar">
         <h2>Data Siswa</h2>
-        <button class="btn btn-primary btn-sm" onclick="openModalTambahSiswa()">+ Tambah Siswa</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="openModalImportSiswa()">⬆️ Import CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openModalTambahSiswa()">+ Tambah Siswa</button>
+        </div>
       </div>
       <div class="filter-bar">
         <select id="filter-kelas-siswa" onchange="gbLoadSiswaList()"><option value="SEMUA">Semua Kelas</option></select>
@@ -1209,12 +1228,35 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <div class="grid grid-2">
       <div class="field"><label>Jenis Kelamin</label>
         <select id="new-jk"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
-      <div class="field"><label>Kelas</label><input id="new-kelas" type="text"></div>
+      <div class="field"><label>Kelas</label><select id="new-kelas"><option value="">— Pilih kelas —</option></select></div>
     </div>
     <p class="muted small">Password default = NIS (siswa bisa login langsung).</p>
     <div style="display:flex;gap:8px;margin-top:10px;">
       <button class="btn btn-outline btn-block" onclick="closeModal('modal-tambah-siswa')">Batal</button>
       <button class="btn btn-primary btn-block" onclick="submitTambahSiswa()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORT SISWA -->
+<div class="modal-bg" id="modal-import-siswa">
+  <div class="modal modal-lg">
+    <h3>Import Data Siswa (CSV)</h3>
+    <p class="muted small">Format kolom (dipisah titik-koma <b>;</b>), satu baris = satu siswa:</p>
+    <p class="small" style="background:var(--bg-soft);padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;" id="csv-template-text-siswa"></p>
+    <div class="small" style="background:#fef3e2;border:1px solid #f0c869;color:#7a5300;padding:10px 12px;border-radius:8px;margin-top:8px;">
+      ⚠️ <b>Catatan:</b> kolom <b>Kelas</b> harus persis sama dengan nama kelas yang sudah ada di menu Admin (contoh: <span style="font-family:monospace;">VII A</span>). Password login siswa otomatis = NIS masing-masing.
+    </div>
+    <label class="import-drop" for="csv-file-input-siswa">
+      <div style="font-size:28px;">📄</div>
+      <p class="small" style="margin-top:6px;">Klik untuk pilih file .csv, atau tempel isi CSV di bawah</p>
+    </label>
+    <input type="file" id="csv-file-input-siswa" accept=".csv" style="display:none" onchange="handleCsvFileSiswa(event)">
+    <textarea class="field-textarea" id="csv-paste-area-siswa" rows="6" placeholder="Tempel isi CSV di sini (opsional, jika tidak upload file)..." style="margin-top:12px;"></textarea>
+    <p id="csv-preview-info-siswa" class="small muted" style="margin-top:8px;"></p>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="btn btn-outline btn-block" onclick="closeModal('modal-import-siswa')">Batal</button>
+      <button class="btn btn-primary btn-block" onclick="prosesImportSiswa()">Import Sekarang</button>
     </div>
   </div>
 </div>
@@ -1226,7 +1268,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <p class="muted small">Sesuai format resmi "Evaluasi, Analisis, dan Tindak Lanjut Program Bimbingan Konseling".</p>
     <input type="hidden" id="eatl-id">
     <div class="grid grid-3">
-      <div class="field"><label>Kelas</label><input id="eatl-kelas" placeholder="Contoh: VIII A"></div>
+      <div class="field"><label>Kelas</label><select id="eatl-kelas"><option value="">— Pilih kelas —</option></select></div>
       <div class="field"><label>Tahun Ajaran</label><input id="eatl-tahun" placeholder="2025/2026"></div>
       <div class="field"><label>Komponen Program</label>
         <select id="eatl-komponen"></select>
@@ -1280,14 +1322,14 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <p class="muted small">Sesuai format resmi "Catatan Anekdot Bimbingan Konseling".</p>
     <input type="hidden" id="anekdot-id">
     <div class="grid grid-3">
-      <div class="field"><label>Kelas</label><input id="anekdot-kelas" placeholder="Contoh: X IPS 1"></div>
+      <div class="field"><label>Kelas</label><select id="anekdot-kelas" onchange="anekdotRefreshSiswaList()"><option value="">— Pilih kelas —</option></select></div>
       <div class="field"><label>Semester</label>
         <select id="anekdot-semester"><option value="Ganjil">Ganjil</option><option value="Genap">Genap</option></select>
       </div>
       <div class="field"><label>Tahun Pelajaran</label><input id="anekdot-tahun" placeholder="2025/2026"></div>
     </div>
     <div class="field"><label>(1) Nama Peserta Didik / Konseli</label>
-      <textarea class="field-textarea" id="anekdot-nama" rows="3" placeholder="Satu nama per baris, jika lebih dari satu siswa"></textarea></div>
+      <div id="anekdot-siswa-checklist" class="checklist-box"><p class="muted small">Pilih kelas terlebih dahulu untuk menampilkan daftar siswa.</p></div></div>
     <div class="field"><label>(3) Topik / Permasalahan</label>
       <input id="anekdot-topik" placeholder="Contoh: Pengiriman stiker yang kurang pantas melalui Whatsapp"></div>
     <div class="field"><label>(4) Deskripsi</label>
@@ -1334,14 +1376,14 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <p class="muted small">Sesuai format resmi "Laporan Observasi Bimbingan Konseling".</p>
     <input type="hidden" id="observasi-id">
     <div class="grid grid-3">
-      <div class="field"><label>Kelas</label><input id="observasi-kelas" placeholder="Contoh: X IPS 1"></div>
+      <div class="field"><label>Kelas</label><select id="observasi-kelas" onchange="observasiRefreshSiswaSelect()"><option value="">— Pilih kelas —</option></select></div>
       <div class="field"><label>Semester</label>
         <select id="observasi-semester"><option value="Ganjil">Ganjil</option><option value="Genap">Genap</option></select>
       </div>
       <div class="field"><label>Tahun Pelajaran</label><input id="observasi-tahun" placeholder="2025/2026"></div>
     </div>
     <div class="grid grid-2">
-      <div class="field"><label>Nama Peserta Didik/Siswa</label><input id="observasi-nama" placeholder="Nama siswa"></div>
+      <div class="field"><label>Nama Peserta Didik/Siswa</label><select id="observasi-nama"><option value="">— Pilih siswa —</option></select></div>
       <div class="field"><label>Tanggal Pelaksanaan</label><input type="date" id="observasi-tanggal"></div>
     </div>
     <div class="field"><label>Topik Permasalahan</label>
@@ -1390,7 +1432,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
           <option value="Bimbingan Klasikal">Bimbingan Klasikal</option>
         </select>
       </div>
-      <div class="field"><label>Kelas</label><input id="konseling-kelas" placeholder="Contoh: X IPS 1"></div>
+      <div class="field"><label>Kelas</label><select id="konseling-kelas" onchange="konselingRefreshSiswaList()"><option value="">— Pilih kelas —</option></select></div>
       <div class="field"><label>Semester</label>
         <select id="konseling-semester"><option value="Ganjil">Ganjil</option><option value="Genap">Genap</option></select>
       </div>
@@ -1400,7 +1442,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
       <div class="field"><label>Tanggal Pelaksanaan</label><input type="date" id="konseling-tanggal"></div>
     </div>
     <div class="field"><label>Daftar Nama</label>
-      <textarea class="field-textarea" id="konseling-nama" rows="3" placeholder="Satu nama per baris. Untuk Bimbingan Klasikal bisa diisi &quot;Seluruh siswa&quot;."></textarea></div>
+      <div id="konseling-siswa-checklist" class="checklist-box"><p class="muted small">Pilih kelas terlebih dahulu untuk menampilkan daftar siswa.</p></div></div>
     <div class="field"><label>Topik</label>
       <input id="konseling-topik" placeholder="Contoh: Pengenalan BK"></div>
     <div style="display:flex;gap:8px;margin-top:6px;">
@@ -1437,7 +1479,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <p class="muted small">Sesuai format resmi "Laporan Mingguan Kegiatan Bimbingan dan Konseling".</p>
     <input type="hidden" id="mingguan-id">
     <div class="grid grid-3">
-      <div class="field"><label>Kelas</label><input id="mingguan-kelas" placeholder="Contoh: X atau X IPS 1"></div>
+      <div class="field"><label>Kelas</label><select id="mingguan-kelas"><option value="">— Pilih kelas —</option></select></div>
       <div class="field"><label>Semester</label>
         <select id="mingguan-semester"><option value="Ganjil">Ganjil</option><option value="Genap">Genap</option></select>
       </div>
@@ -1499,7 +1541,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <p class="muted small">Sesuai format resmi "Laporan Bulanan Kegiatan Bimbingan dan Konseling".</p>
     <input type="hidden" id="bulanan-id">
     <div class="grid grid-3">
-      <div class="field"><label>Kelas</label><input id="bulanan-kelas" placeholder="Contoh: X atau X IPS 1"></div>
+      <div class="field"><label>Kelas</label><select id="bulanan-kelas"><option value="">— Pilih kelas —</option></select></div>
       <div class="field"><label>Semester</label>
         <select id="bulanan-semester"><option value="Ganjil">Ganjil</option><option value="Genap">Genap</option></select>
       </div>
@@ -1556,7 +1598,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <p class="muted small">Sesuai format resmi "Laporan Tahunan Kegiatan Bimbingan dan Konseling".</p>
     <input type="hidden" id="tahunan-id">
     <div class="grid grid-3">
-      <div class="field"><label>Kelas</label><input id="tahunan-kelas" placeholder="Contoh: X atau X IPS 1"></div>
+      <div class="field"><label>Kelas</label><select id="tahunan-kelas"><option value="">— Pilih kelas —</option></select></div>
       <div class="field"><label>Tahun Pelajaran</label><input id="tahunan-tahun" placeholder="2025/2026"></div>
       <div class="field"><label>Tanggal Pelaksanaan</label><input id="tahunan-tanggal-pelaksanaan" placeholder="Contoh: 24 Juli - 10 Agustus 2026"></div>
     </div>
@@ -1760,21 +1802,57 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
  * Spreadsheet tetap jadi backend/database lewat URL Web App di bawah.
  *
  * Ganti URL ini kalau kamu deploy ulang dan dapat URL /exec baru.
+ *
+ * FITUR OFFLINE:
+ * - Hasil pemanggilan "baca" tertentu (soal angket/sosiometri, dsb)
+ *   disimpan di localStorage. Kalau koneksi putus saat memanggil ulang,
+ *   data terakhir yang tersimpan itu dipakai sebagai fallback.
+ * - Pengisian angket & sosiometri (submitAngket/submitSosio) yang gagal
+ *   terkirim karena tidak ada koneksi, otomatis disimpan di localStorage
+ *   sebagai antrian, lalu dikirim ulang otomatis begitu online kembali.
  *************************************************************/
 const TEDUHBK_API_URL = 'https://script.google.com/macros/s/AKfycbyHiawKP0ynCYY0BGJ6NgFdJi1l93g3HdzaFUXusSdlnIbweRZNxkRrs4gMXaRZSRY7AQ/exec';
 
+const OFFLINE_QUEUE_KEY = 'teduhbk_offline_queue_v1';
+// Fungsi "tulis" yang aman diantrekan kalau offline (isian siswa, boleh tertunda)
+const OFFLINE_QUEUEABLE = ['submitAngket', 'submitSosio'];
+// Fungsi "baca" yang hasil suksesnya di-cache untuk fallback offline
+const OFFLINE_CACHEABLE = ['getPertanyaanList','getSosioQuestions','getPublicSettings','getJawabanSiswa','getSosioJawabanSiswa','getSiswaProfile'];
+
 (function () {
-  function callApi(fnName, args, successHandler, failureHandler, userObject) {
-    fetch(TEDUHBK_API_URL, {
+  function cacheKey(fnName, args) {
+    return 'teduhbk_cache_' + fnName + '_' + JSON.stringify(args || []);
+  }
+
+  function readQueue() {
+    try { return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]'); }
+    catch (e) { return []; }
+  }
+  function writeQueue(list) {
+    try { localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(list)); } catch (e) {}
+    updateOfflineBanner();
+  }
+  function queueAdd(fnName, args) {
+    const list = readQueue();
+    list.push({ id: 'Q' + Date.now() + Math.floor(Math.random() * 10000), fn: fnName, args: args, ts: Date.now() });
+    writeQueue(list);
+  }
+
+  function rawFetch(fnName, args) {
+    return fetch(TEDUHBK_API_URL, {
       method: 'POST',
-      // Content-Type text/plain sengaja dipakai supaya browser TIDAK
-      // mengirim preflight OPTIONS (Apps Script tidak punya doOptions).
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ fn: fnName, args: args })
-    })
-      .then(function (res) { return res.json(); })
+    }).then(function (res) { return res.json(); });
+  }
+
+  function callApi(fnName, args, successHandler, failureHandler, userObject) {
+    rawFetch(fnName, args)
       .then(function (json) {
         if (json && json.success) {
+          if (OFFLINE_CACHEABLE.indexOf(fnName) !== -1) {
+            try { localStorage.setItem(cacheKey(fnName, args), JSON.stringify(json.data)); } catch (e) {}
+          }
           if (successHandler) successHandler(json.data, userObject);
         } else {
           const msg = (json && json.error) ? json.error : 'Terjadi kesalahan pada server.';
@@ -1783,6 +1861,23 @@ const TEDUHBK_API_URL = 'https://script.google.com/macros/s/AKfycbyHiawKP0ynCYY0
         }
       })
       .catch(function (err) {
+        // Tidak ada koneksi / server tidak terjangkau.
+        if (OFFLINE_QUEUEABLE.indexOf(fnName) !== -1) {
+          queueAdd(fnName, args);
+          showOfflineToast('Tidak ada koneksi internet. Jawaban disimpan sementara di perangkat ini dan akan otomatis terkirim saat online kembali.');
+          if (successHandler) successHandler({ success: true, offline: true }, userObject);
+          return;
+        }
+        if (OFFLINE_CACHEABLE.indexOf(fnName) !== -1) {
+          try {
+            const cached = localStorage.getItem(cacheKey(fnName, args));
+            if (cached) {
+              showOfflineToast('Sedang offline — menampilkan data tersimpan terakhir.');
+              if (successHandler) successHandler(JSON.parse(cached), userObject);
+              return;
+            }
+          } catch (e) {}
+        }
         if (failureHandler) failureHandler(err, userObject);
         else console.error('TeduhBK API network error (' + fnName + '):', err);
       });
@@ -1813,13 +1908,145 @@ const TEDUHBK_API_URL = 'https://script.google.com/macros/s/AKfycbyHiawKP0ynCYY0
   window.google.script = window.google.script || {};
   window.google.script.run = makeRunner(null, null, null);
   window.google.script.host = window.google.script.host || { close: function () {} };
+
+  /*************** SINKRONISASI ANTRIAN OFFLINE ***************/
+  let SYNCING = false;
+  function syncQueueNow() {
+    if (SYNCING) return;
+    const list = readQueue();
+    if (!list.length || !navigator.onLine) return;
+    SYNCING = true;
+    const item = list[0];
+    rawFetch(item.fn, item.args)
+      .then(function (json) {
+        const rest = readQueue().filter(function (q) { return q.id !== item.id; });
+        writeQueue(rest);
+        SYNCING = false;
+        if (rest.length) syncQueueNow(); else showOfflineToast('Semua jawaban tersimpan sudah berhasil terkirim.');
+      })
+      .catch(function () {
+        SYNCING = false; // masih offline / server belum bisa dihubungi, coba lagi nanti
+      });
+  }
+  window.addEventListener('online', syncQueueNow);
+  setInterval(syncQueueNow, 15000);
+  window.addEventListener('DOMContentLoaded', function () {
+    updateOfflineBanner();
+    syncQueueNow();
+  });
+
+  window._teduhbkSyncQueueNow = syncQueueNow; // dipakai tombol "Coba kirim sekarang"
+  window._teduhbkReadQueue = readQueue;
 })();
+
+function showOfflineToast(msg) {
+  if (typeof showToast === 'function') showToast(msg, 'ok');
+  else console.log(msg);
+}
+
+function updateOfflineBanner() {
+  const el = document.getElementById('offline-banner');
+  if (!el) return;
+  const list = window._teduhbkReadQueue ? window._teduhbkReadQueue() : [];
+  if (!list.length) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  document.getElementById('offline-banner-text').textContent =
+    list.length + ' jawaban menunggu dikirim (tersimpan di perangkat ini)';
+}
 
 /*************************************************************
  * STATE GLOBAL
  *************************************************************/
 let CURRENT = { role: null, id: null, nama: null, kelas: null };
 let HV_SISWA_LIST = [];
+let KELAS_NAMES_CACHE = [];
+
+function populateKelasSelect(id){
+  const sel = document.getElementById(id);
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Pilih kelas —</option>' +
+    KELAS_NAMES_CACHE.map(n=>'<option value="'+n+'">'+n+'</option>').join('');
+  if(current) sel.value = current;
+}
+
+function filterSiswaByKelas(kelas){
+  if(!kelas) return [];
+  return HV_SISWA_LIST.filter(s=>s.Kelas===kelas);
+}
+
+function observasiRefreshSiswaSelect(selectedNama){
+  const kelas = document.getElementById('observasi-kelas').value;
+  const list = filterSiswaByKelas(kelas);
+  const sel = document.getElementById('observasi-nama');
+  let optionsHtml = '<option value="">— Pilih siswa —</option>' +
+    list.map(s=>'<option value="'+s.Nama+'">'+s.Nama+'</option>').join('');
+  if(selectedNama && list.every(s=>s.Nama!==selectedNama)){
+    optionsHtml += '<option value="'+selectedNama+'">'+selectedNama+' (tidak terdaftar di kelas ini)</option>';
+  }
+  sel.innerHTML = optionsHtml;
+  sel.value = selectedNama || '';
+}
+
+function anekdotRefreshSiswaList(selectedNames){
+  const kelas = document.getElementById('anekdot-kelas').value;
+  const list = filterSiswaByKelas(kelas);
+  const checked = selectedNames || [];
+  const rosterNames = list.map(s=>s.Nama);
+  const extra = checked.filter(n=>rosterNames.indexOf(n)===-1);
+  const box = document.getElementById('anekdot-siswa-checklist');
+  if(!list.length && !extra.length){
+    box.innerHTML = '<p class="muted small">Pilih kelas terlebih dahulu untuk menampilkan daftar siswa.</p>';
+    return;
+  }
+  let html = list.map(s=>
+    '<label><input type="checkbox" value="'+s.Nama+'" '+(checked.indexOf(s.Nama)>-1?'checked':'')+'> '+s.Nama+'</label>'
+  ).join('');
+  if(extra.length){
+    html += extra.map(n=>
+      '<label style="color:#b45309;"><input type="checkbox" value="'+n+'" checked> '+n+' <span class="small">(tidak terdaftar di kelas ini)</span></label>'
+    ).join('');
+  }
+  box.innerHTML = html;
+}
+function getAnekdotCheckedNames(){
+  return Array.from(document.querySelectorAll('#anekdot-siswa-checklist input[type=checkbox]:checked')).map(cb=>cb.value);
+}
+
+function konselingRefreshSiswaList(selectedNames){
+  const kelas = document.getElementById('konseling-kelas').value;
+  const list = filterSiswaByKelas(kelas);
+  const checked = selectedNames || [];
+  const isSeluruh = checked.length===1 && checked[0]==='Seluruh siswa';
+  const rosterNames = list.map(s=>s.Nama);
+  const extra = isSeluruh ? [] : checked.filter(n=>rosterNames.indexOf(n)===-1);
+  const box = document.getElementById('konseling-siswa-checklist');
+  let html = '<label style="font-weight:600;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:4px;">'+
+    '<input type="checkbox" id="konseling-seluruh-siswa" '+(isSeluruh?'checked':'')+' onchange="konselingToggleSeluruh()"> Seluruh siswa (Bimbingan Klasikal)</label>';
+  if(!list.length && !extra.length){
+    html += '<p class="muted small">Pilih kelas terlebih dahulu untuk menampilkan daftar siswa.</p>';
+  } else {
+    html += list.map(s=>
+      '<label class="konseling-siswa-item"><input type="checkbox" class="konseling-siswa-cb" value="'+s.Nama+'" '+
+      (checked.indexOf(s.Nama)>-1?'checked':'')+' '+(isSeluruh?'disabled':'')+'> '+s.Nama+'</label>'
+    ).join('');
+    if(extra.length){
+      html += extra.map(n=>
+        '<label class="konseling-siswa-item" style="color:#b45309;"><input type="checkbox" class="konseling-siswa-cb" value="'+n+'" checked> '+n+' <span class="small">(tidak terdaftar di kelas ini)</span></label>'
+      ).join('');
+    }
+  }
+  box.innerHTML = html;
+}
+function konselingToggleSeluruh(){
+  const checked = document.getElementById('konseling-seluruh-siswa').checked;
+  document.querySelectorAll('.konseling-siswa-cb').forEach(cb=>{ cb.disabled = checked; if(checked) cb.checked=false; });
+}
+function getKonselingCheckedNames(){
+  const seluruh = document.getElementById('konseling-seluruh-siswa');
+  if(seluruh && seluruh.checked) return ['Seluruh siswa'];
+  return Array.from(document.querySelectorAll('.konseling-siswa-cb:checked')).map(cb=>cb.value);
+}
 let PETA_KLASIFIKASI = [];
 let PETA_SISWA_DATA = [];
 let PK_SISWA_LIST = [];
@@ -1874,7 +2101,7 @@ function setStaffRole(role){
 
 function showSplashThen(callback){
   switchView('view-splash');
-  setTimeout(callback, 1600);
+  setTimeout(callback, 2300);
 }
 
 function doLogin(){
@@ -2084,7 +2311,7 @@ function kirimAngket(){
   google.script.run
     .withSuccessHandler(res=>{
       if(!res.success){ showToast(res.message, 'err'); btn.disabled=false; btn.textContent='Kirim Jawaban'; return; }
-      showToast('Jawaban berhasil dikirim!', 'ok');
+      showToast(res.offline ? 'Tidak ada internet — jawaban tersimpan di perangkat, akan otomatis terkirim saat online.' : 'Jawaban berhasil dikirim!', 'ok');
       document.getElementById('siswa-stepper').style.display='none';
       document.querySelectorAll('.step-panel').forEach(p=>p.style.display='none');
       document.getElementById('siswa-locked').style.display='block';
@@ -2185,7 +2412,7 @@ function kirimSosio(){
   google.script.run
     .withSuccessHandler(res=>{
       if(!res.success){ showToast(res.message, 'err'); btn.disabled=false; btn.textContent='Kirim Jawaban'; return; }
-      showToast('Jawaban sosiometri berhasil dikirim!', 'ok');
+      showToast(res.offline ? 'Tidak ada internet — jawaban tersimpan di perangkat, akan otomatis terkirim saat online.' : 'Jawaban sosiometri berhasil dikirim!', 'ok');
       document.getElementById('sosio-stepper').style.display='none';
       document.querySelectorAll('.step-panel-sosio').forEach(p=>p.style.display='none');
       document.getElementById('sosio-locked').style.display='block';
@@ -2337,12 +2564,14 @@ function renderKelasChart(elId, perKelas){
 function gbPopulateKelasFilters(){
   google.script.run.withSuccessHandler(list=>{
     const names = list.map(k=>k.NamaKelas);
+    KELAS_NAMES_CACHE = names;
     ['filter-kelas-siswa','filter-kelas-hasil','filter-kelas-rekap','filter-kelas-eatl','filter-kelas-anekdot','filter-kelas-sosio','filter-kelas-hv','filter-kelas-biblio','filter-kelas-observasi','filter-kelas-konseling','filter-kelas-mingguan','filter-kelas-bulanan','filter-kelas-tahunan'].forEach(id=>{
       const sel = document.getElementById(id);
       const keepFirst = id !== 'filter-kelas-rekap' && id !== 'filter-kelas-sosio';
       sel.innerHTML = (keepFirst ? '<option value="SEMUA">Semua Kelas</option>' : '') +
         names.map(n=>'<option value="'+n+'">'+n+'</option>').join('');
     });
+    ['new-kelas','eatl-kelas','anekdot-kelas','observasi-kelas','konseling-kelas','mingguan-kelas','bulanan-kelas','tahunan-kelas'].forEach(populateKelasSelect);
   }).getDaftarKelas();
   google.script.run.withSuccessHandler(list=>{
     const opts = '<option value="">— Pilih komponen —</option>' + list.map(k=>'<option value="'+k+'">'+k+'</option>').join('');
@@ -2356,6 +2585,9 @@ function gbPopulateKelasFilters(){
   google.script.run.withSuccessHandler(tpl=>{
     document.getElementById('csv-template-text-anekdot').textContent = tpl;
   }).getAnekdotCsvTemplate();
+  google.script.run.withSuccessHandler(tpl=>{
+    document.getElementById('csv-template-text-siswa').textContent = tpl;
+  }).getSiswaCsvTemplate();
   google.script.run.withSuccessHandler(tpl=>{
     document.getElementById('csv-template-text-observasi').textContent = tpl;
   }).getObservasiCsvTemplate();
@@ -2447,6 +2679,54 @@ function submitTambahSiswa(){
     showToast('Siswa ditambahkan.', 'ok'); closeModal('modal-tambah-siswa'); gbLoadSiswaList();
     document.getElementById('new-nis').value=''; document.getElementById('new-nama').value=''; document.getElementById('new-kelas').value='';
   }).tambahSiswa(siswa);
+}
+
+function openModalImportSiswa(){
+  document.getElementById('csv-paste-area-siswa').value = '';
+  document.getElementById('csv-preview-info-siswa').textContent = '';
+  openModal('modal-import-siswa');
+}
+
+function handleCsvFileSiswa(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('csv-paste-area-siswa').value = e.target.result;
+    document.getElementById('csv-preview-info-siswa').textContent = 'File "'+file.name+'" dimuat. Klik Import Sekarang untuk lanjut.';
+  };
+  reader.readAsText(file);
+}
+
+function parseCsvSiswa(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
+  if(lines.length < 2) return [];
+  const headers = lines[0].split(';').map(h=>h.trim());
+  const rows = [];
+  for(let i=1;i<lines.length;i++){
+    const cols = lines[i].split(';');
+    const obj = {};
+    headers.forEach((h,idx)=>{ obj[h] = (cols[idx]||'').trim(); });
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function prosesImportSiswa(){
+  const text = document.getElementById('csv-paste-area-siswa').value.trim();
+  if(!text){ showToast('Belum ada data CSV.', 'err'); return; }
+  const rawRows = parseCsvSiswa(text);
+  if(!rawRows.length){ showToast('Format CSV tidak dikenali. Pastikan baris pertama adalah header.', 'err'); return; }
+  // konversi header CSV (NIS;Nama;JK;Kelas) ke bentuk yang dipahami importSiswaBulk (nis,nama,jk,kelas)
+  const rows = rawRows.map(r => ({
+    nis: r.NIS || '', nama: r.Nama || '', jk: r.JK || '', kelas: r.Kelas || ''
+  })).filter(r => r.nis && r.nama && r.kelas);
+  if(!rows.length){ showToast('Tidak ada baris valid (NIS, Nama, Kelas wajib diisi).', 'err'); return; }
+  document.getElementById('csv-preview-info-siswa').textContent = 'Mengimpor '+rows.length+' siswa...';
+  google.script.run.withSuccessHandler(res=>{
+    showToast(res.jumlah+' siswa berhasil diimpor.', 'ok');
+    closeModal('modal-import-siswa'); gbLoadSiswaList();
+  }).withFailureHandler(err=> showToast('Gagal import: '+err.message, 'err')).importSiswaBulk(rows);
 }
 
 function gbLoadSiswaSelect(){
@@ -2692,10 +2972,11 @@ function gbLoadAnekdotList(){
 
 function openModalAnekdot(){
   document.getElementById('anekdot-modal-title').textContent = 'Tambah Catatan Anekdot';
-  ['anekdot-id','anekdot-kelas','anekdot-tahun','anekdot-nama','anekdot-topik',
+  ['anekdot-id','anekdot-kelas','anekdot-tahun','anekdot-topik',
    'anekdot-deskripsi','anekdot-interpretasi','anekdot-rekomendasi'
   ].forEach(id=> document.getElementById(id).value = '');
   document.getElementById('anekdot-semester').value = 'Ganjil';
+  anekdotRefreshSiswaList();
   openModal('modal-anekdot');
 }
 
@@ -2707,7 +2988,7 @@ function gbEditAnekdot(id){
     document.getElementById('anekdot-kelas').value = r.Kelas || '';
     document.getElementById('anekdot-semester').value = r.Semester || 'Ganjil';
     document.getElementById('anekdot-tahun').value = r.TahunAjaran || '';
-    document.getElementById('anekdot-nama').value = r.NamaSiswa || '';
+    anekdotRefreshSiswaList((r.NamaSiswa||'').split('\n').map(s=>s.trim()).filter(Boolean));
     document.getElementById('anekdot-topik').value = r.Topik || '';
     document.getElementById('anekdot-deskripsi').value = r.Deskripsi || '';
     document.getElementById('anekdot-interpretasi').value = r.Interpretasi || '';
@@ -2719,7 +3000,7 @@ function gbEditAnekdot(id){
 function submitAnekdot(){
   const record = {
     ID: document.getElementById('anekdot-id').value,
-    NamaSiswa: document.getElementById('anekdot-nama').value.trim(),
+    NamaSiswa: getAnekdotCheckedNames().join('\n'),
     Kelas: document.getElementById('anekdot-kelas').value.trim(),
     Semester: document.getElementById('anekdot-semester').value,
     TahunAjaran: document.getElementById('anekdot-tahun').value.trim(),
@@ -2831,10 +3112,11 @@ function gbLoadObservasiList(){
 
 function openModalObservasi(){
   document.getElementById('observasi-modal-title').textContent = 'Tambah Observasi';
-  ['observasi-id','observasi-kelas','observasi-tahun','observasi-nama','observasi-tanggal',
+  ['observasi-id','observasi-kelas','observasi-tahun','observasi-tanggal',
    'observasi-topik','observasi-hasil'
   ].forEach(id=> document.getElementById(id).value = '');
   document.getElementById('observasi-semester').value = 'Ganjil';
+  observasiRefreshSiswaSelect();
   openModal('modal-observasi');
 }
 
@@ -2846,7 +3128,7 @@ function gbEditObservasi(id){
     document.getElementById('observasi-kelas').value = r.Kelas || '';
     document.getElementById('observasi-semester').value = r.Semester || 'Ganjil';
     document.getElementById('observasi-tahun').value = r.TahunAjaran || '';
-    document.getElementById('observasi-nama').value = r.NamaSiswa || '';
+    observasiRefreshSiswaSelect(r.NamaSiswa || '');
     document.getElementById('observasi-tanggal').value = r.TanggalPelaksanaan || '';
     document.getElementById('observasi-topik').value = r.TopikPermasalahan || '';
     document.getElementById('observasi-hasil').value = r.HasilObservasi || '';
@@ -2969,10 +3251,11 @@ function gbLoadKonselingList(){
 
 function openModalKonseling(){
   document.getElementById('konseling-modal-title').textContent = 'Tambah Catatan Konseling';
-  ['konseling-id','konseling-kelas','konseling-tahun','konseling-nama','konseling-tanggal','konseling-topik']
+  ['konseling-id','konseling-kelas','konseling-tahun','konseling-tanggal','konseling-topik']
     .forEach(id=> document.getElementById(id).value = '');
   document.getElementById('konseling-layanan').value = 'Konseling Kelompok';
   document.getElementById('konseling-semester').value = 'Ganjil';
+  konselingRefreshSiswaList();
   openModal('modal-konseling');
 }
 
@@ -2985,7 +3268,7 @@ function gbEditKonseling(id){
     document.getElementById('konseling-kelas').value = r.Kelas || '';
     document.getElementById('konseling-semester').value = r.Semester || 'Ganjil';
     document.getElementById('konseling-tahun').value = r.TahunAjaran || '';
-    document.getElementById('konseling-nama').value = r.NamaSiswa || '';
+    konselingRefreshSiswaList((r.NamaSiswa||'').split('\n').map(s=>s.trim()).filter(Boolean));
     document.getElementById('konseling-tanggal').value = r.TanggalPelaksanaan || '';
     document.getElementById('konseling-topik').value = r.Topik || '';
     openModal('modal-konseling');
@@ -2996,7 +3279,7 @@ function submitKonseling(){
   const record = {
     ID: document.getElementById('konseling-id').value,
     Layanan: document.getElementById('konseling-layanan').value,
-    NamaSiswa: document.getElementById('konseling-nama').value.trim(),
+    NamaSiswa: getKonselingCheckedNames().join('\n'),
     Kelas: document.getElementById('konseling-kelas').value.trim(),
     Semester: document.getElementById('konseling-semester').value,
     TahunAjaran: document.getElementById('konseling-tahun').value.trim(),
