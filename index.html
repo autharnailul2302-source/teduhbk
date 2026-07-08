@@ -210,10 +210,11 @@ tr:hover td{background:#fafbff;}
 .empty-state .icon{font-size:44px;margin-bottom:10px;}
 
 .modal-bg{position:fixed;inset:0;background:rgba(15,20,35,.6);backdrop-filter:blur(2px);display:none;
-  align-items:center;justify-content:center;z-index:100;padding:16px;}
+  align-items:center;justify-content:center;z-index:100;padding:16px;
+  transform:translateZ(0);will-change:transform;}
 .modal-bg.active{display:flex;animation:fadeIn .2s ease;}
 .modal{background:#fff;border-radius:18px;padding:26px;width:100%;max-width:460px;max-height:88vh;overflow:auto;
-  box-shadow:var(--shadow-lg);}
+  box-shadow:var(--shadow-lg);transform:translateZ(0);isolation:isolate;}
 .modal.modal-lg{max-width:760px;}
 
 .toast{position:fixed;top:18px;right:18px;background:var(--navy-dk);color:#fff;padding:13px 19px;
