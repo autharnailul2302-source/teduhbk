@@ -578,7 +578,9 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
 
     <!-- HASIL AKPD PER SISWA -->
     <div id="gb-hasil" class="tab-panel" style="display:none;">
-      <div class="topbar"><h2>Hasil AKPD per Siswa</h2></div>
+      <div class="topbar"><h2>Hasil AKPD per Siswa</h2>
+        <button class="btn btn-outline btn-sm" onclick="gbOpenKelolaSoal()">📝 Kelola Bank Soal AKPD</button>
+      </div>
       <div class="filter-bar">
         <select id="filter-kelas-hasil" onchange="gbLoadSiswaSelect()"><option value="SEMUA">Semua Kelas</option></select>
         <select id="select-siswa-hasil" onchange="gbLoadDetailSiswa()"><option value="">— Pilih siswa —</option></select>
@@ -1261,6 +1263,68 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <div style="display:flex;gap:8px;margin-top:10px;">
       <button class="btn btn-outline btn-block" onclick="closeModal('modal-import-siswa')">Batal</button>
       <button class="btn btn-primary btn-block" onclick="prosesImportSiswa()">Import Sekarang</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ISI/EDIT AKPD OLEH GURU BK -->
+<div class="modal-bg" id="modal-gb-akpd">
+  <div class="modal modal-lg">
+    <h3>Isi / Edit Jawaban AKPD</h3>
+    <p class="muted small" id="gb-akpd-modal-subtitle" style="font-weight:600;"></p>
+    <p class="small" style="background:#eef4ff;border:1px solid #bcd4ff;color:#1e4a8f;padding:10px 12px;border-radius:8px;">
+      Diisi langsung oleh Guru BK atas nama siswa (misal: hasil wawancara, atau siswa belum sempat mengisi sendiri).
+    </p>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0;">
+      <span class="small muted" id="gb-akpd-progress">0 / 0 terjawab</span>
+      <span style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="gbIsiSemuaAkpd(1)">Centang semua YA</button>
+        <button class="btn btn-outline btn-sm" onclick="gbIsiSemuaAkpd(0)">Centang semua TIDAK</button>
+      </span>
+    </div>
+    <div id="gb-akpd-list" style="max-height:50vh;overflow-y:auto;"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn btn-outline btn-block" onclick="closeModal('modal-gb-akpd')">Batal</button>
+      <button class="btn btn-primary btn-block" id="gb-akpd-submit" onclick="gbSubmitAkpd()" disabled>Simpan Jawaban</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL KELOLA BANK SOAL AKPD -->
+<div class="modal-bg" id="modal-kelola-soal">
+  <div class="modal modal-lg">
+    <h3>Kelola Bank Soal AKPD</h3>
+    <p class="muted small">Ubah kalimat pernyataan/aspek soal yang sudah ada, atau tambah soal baru. Menghapus soal <b>tidak</b> menghapus jawaban siswa yang sudah tersimpan untuk soal itu — soal itu hanya berhenti muncul di angket berikutnya.</p>
+    <button class="btn btn-primary btn-sm" style="margin:10px 0;" onclick="gbOpenFormSoal()">+ Tambah Soal Baru</button>
+    <div id="kelola-soal-list" style="max-height:52vh;overflow-y:auto;"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn btn-outline btn-block" onclick="closeModal('modal-kelola-soal')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TAMBAH/EDIT SATU SOAL -->
+<div class="modal-bg" id="modal-form-soal">
+  <div class="modal">
+    <h3 id="form-soal-title">Tambah Soal Baru</h3>
+    <input type="hidden" id="soal-no">
+    <div class="field"><label>Aspek</label>
+      <select id="soal-aspek">
+        <option value="PRIBADI">Pribadi</option>
+        <option value="SOSIAL">Sosial</option>
+        <option value="BELAJAR">Belajar</option>
+        <option value="KARIER">Karier</option>
+      </select>
+    </div>
+    <div class="field"><label>Pernyataan (ditampilkan ke siswa, gaya "Saya ...")</label>
+      <textarea class="field-textarea" id="soal-pernyataan" rows="2" placeholder="Contoh: Saya belum tahu cara mengatur waktu belajar"></textarea>
+    </div>
+    <div class="field"><label>Rumusan Kebutuhan (topik layanan jika jawaban YA)</label>
+      <input id="soal-rumusan" placeholder="Contoh: Cara Mengatur Waktu">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="btn btn-outline btn-block" onclick="closeModal('modal-form-soal')">Batal</button>
+      <button class="btn btn-primary btn-block" onclick="submitFormSoal()">Simpan</button>
     </div>
   </div>
 </div>
@@ -2826,7 +2890,8 @@ function gbLoadDetailSiswa(){
 
 function renderDetailSiswaHTML(d){
   if(!d.sudahIsi){
-    return '<div class="card empty-state"><div class="icon">⏳</div><h3>'+d.siswa.Nama+'</h3><p>Siswa ini belum mengisi angket AKPD.</p></div>';
+    return '<div class="card empty-state"><div class="icon">⏳</div><h3>'+d.siswa.Nama+'</h3><p>Siswa ini belum mengisi angket AKPD.</p>'+
+      '<button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="gbOpenIsiAkpd()">✏️ Isi Jawaban AKPD (oleh Guru BK)</button></div>';
   }
   const aspekOrder = d.urutanPrioritas;
   let barsHtml = aspekOrder.map(a=>
@@ -2848,11 +2913,164 @@ function renderDetailSiswaHTML(d){
       '<p class="muted small">Kelas '+d.siswa.Kelas+' &middot; '+(d.siswa.JK==='L'?'Laki-laki':'Perempuan')+'</p>'+
       '<div style="margin-top:14px;">'+barsHtml+'</div>'+
       '<div class="card" style="background:#f4f6f9;margin-top:10px;border:none;"><b>Kesimpulan:</b><br>'+d.kesimpulan+'</div>'+
+      '<button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="gbOpenIsiAkpd()">✏️ Edit Jawaban AKPD</button>'+
     '</div>'+
     '<div class="card"><h3>Rumusan Kebutuhan (berdasarkan jawaban YA)</h3>'+
       '<div style="margin-top:10px;max-height:420px;overflow:auto;">'+(butirHtml || '<p class="muted">Tidak ada kebutuhan spesifik tercatat.</p>')+'</div>'+
     '</div>'+
   '</div>';
+}
+
+/*************** GURU BK — ISI/EDIT AKPD MANUAL UNTUK SISWA ***************/
+let GB_AKPD_SISWA_ID = null;
+let GB_AKPD_QUESTIONS = [];
+let GB_JAWABAN_STATE = {};
+
+function gbOpenIsiAkpd(){
+  const id = document.getElementById('select-siswa-hasil').value;
+  if(!id){ showToast('Pilih siswa terlebih dahulu.', 'err'); return; }
+  GB_AKPD_SISWA_ID = id;
+  const namaSiswa = document.getElementById('select-siswa-hasil').selectedOptions[0].textContent;
+  document.getElementById('gb-akpd-modal-subtitle').textContent = namaSiswa;
+  document.getElementById('gb-akpd-list').innerHTML = '<p class="muted">Memuat pertanyaan...</p>';
+  document.getElementById('gb-akpd-submit').disabled = true;
+  openModal('modal-gb-akpd');
+  google.script.run.withSuccessHandler(qs=>{
+    GB_AKPD_QUESTIONS = qs;
+    google.script.run.withSuccessHandler(jw=>{
+      GB_JAWABAN_STATE = {};
+      qs.forEach(q=> GB_JAWABAN_STATE['I'+q.no] = jw ? (jw['I'+q.no] === 1 || jw['I'+q.no] === '1' ? 1 : (jw['I'+q.no] === 0 || jw['I'+q.no] === '0' ? 0 : undefined)) : undefined);
+      gbRenderAkpdList();
+    }).getJawabanSiswa(id);
+  }).getPertanyaanList();
+}
+
+function gbRenderAkpdList(){
+  const wrap = document.getElementById('gb-akpd-list');
+  wrap.innerHTML = '';
+  GB_AKPD_QUESTIONS.forEach(q=>{
+    const val = GB_JAWABAN_STATE['I'+q.no];
+    const div = document.createElement('div');
+    div.className = 'angket-item';
+    div.id = 'gb-akpd-item-'+q.no;
+    div.innerHTML =
+      '<div class="qno">No. '+q.no+' &middot; '+ASPEK_LABEL[q.aspek]+'</div>'+
+      '<div>'+q.pernyataan+'</div>'+
+      '<div class="yn-toggle">'+
+        '<button class="yn-btn yes'+(val===1?' selected':'')+'" onclick="gbSetJawabanAkpd('+q.no+',1)">YA</button>'+
+        '<button class="yn-btn no'+(val===0?' selected':'')+'" onclick="gbSetJawabanAkpd('+q.no+',0)">TIDAK</button>'+
+      '</div>';
+    wrap.appendChild(div);
+  });
+  gbUpdateAkpdProgress();
+}
+function gbSetJawabanAkpd(no, val){
+  GB_JAWABAN_STATE['I'+no] = val;
+  const item = document.getElementById('gb-akpd-item-'+no);
+  item.querySelector('.yes').classList.toggle('selected', val===1);
+  item.querySelector('.no').classList.toggle('selected', val===0);
+  gbUpdateAkpdProgress();
+}
+function gbUpdateAkpdProgress(){
+  const total = GB_AKPD_QUESTIONS.length;
+  const terjawab = GB_AKPD_QUESTIONS.filter(q=> GB_JAWABAN_STATE['I'+q.no] !== undefined).length;
+  document.getElementById('gb-akpd-progress').textContent = terjawab + ' / ' + total + ' terjawab';
+  document.getElementById('gb-akpd-submit').disabled = terjawab < total;
+}
+function gbIsiSemuaAkpd(val){
+  GB_AKPD_QUESTIONS.forEach(q=> gbSetJawabanAkpd(q.no, val));
+}
+function gbSubmitAkpd(){
+  const id = GB_AKPD_SISWA_ID;
+  const btn = document.getElementById('gb-akpd-submit');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  // buka kunci dulu (kalau sebelumnya sudah terkunci) supaya Guru BK selalu bisa isi/edit
+  google.script.run.withSuccessHandler(()=>{
+    google.script.run.withSuccessHandler(res=>{
+      if(!res.success){ showToast(res.message, 'err'); btn.disabled=false; btn.textContent='Simpan Jawaban'; return; }
+      showToast('Jawaban AKPD berhasil disimpan.', 'ok');
+      closeModal('modal-gb-akpd');
+      gbLoadDetailSiswa();
+      gbLoadSiswaSelect();
+    }).withFailureHandler(err=>{ showToast('Gagal: '+err.message, 'err'); btn.disabled=false; btn.textContent='Simpan Jawaban'; })
+    .submitAngket(id, GB_JAWABAN_STATE);
+  }).withFailureHandler(err=>{ showToast('Gagal buka akses: '+err.message, 'err'); btn.disabled=false; btn.textContent='Simpan Jawaban'; })
+  .bukaAksesSiswa(id);
+}
+
+/*************** GURU BK — KELOLA BANK SOAL AKPD ***************/
+let SOAL_LIST_CACHE = [];
+
+function gbOpenKelolaSoal(){
+  openModal('modal-kelola-soal');
+  gbLoadSoalList();
+}
+
+function gbLoadSoalList(){
+  document.getElementById('kelola-soal-list').innerHTML = '<p class="muted">Memuat...</p>';
+  google.script.run.withSuccessHandler(list=>{
+    SOAL_LIST_CACHE = list;
+    if(!list.length){ document.getElementById('kelola-soal-list').innerHTML = '<p class="muted">Belum ada soal.</p>'; return; }
+    document.getElementById('kelola-soal-list').innerHTML = list.map(q=>
+      '<div class="card" style="padding:12px;margin-bottom:8px;">'+
+        '<div style="display:flex;justify-content:space-between;gap:10px;">'+
+          '<div>'+
+            '<b>No. '+q.no+'</b> &middot; <span style="color:'+ASPEK_COLOR[q.aspek]+';font-weight:600;">'+ASPEK_LABEL[q.aspek]+'</span>'+
+            '<p style="margin:4px 0 0 0;">'+q.pernyataan+'</p>'+
+            '<p class="small muted" style="margin:2px 0 0 0;">Rumusan: '+(q.rumusan||'-')+'</p>'+
+          '</div>'+
+          '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">'+
+            '<button class="btn btn-outline btn-sm" onclick="gbOpenFormSoal('+q.no+')">Edit</button>'+
+            '<button class="btn btn-danger btn-sm" onclick="gbHapusSoal('+q.no+')">Hapus</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'
+    ).join('');
+  }).getPertanyaanList();
+}
+
+function gbOpenFormSoal(no){
+  document.getElementById('soal-no').value = no || '';
+  if(no){
+    const q = SOAL_LIST_CACHE.find(x=>x.no===no);
+    document.getElementById('form-soal-title').textContent = 'Edit Soal No. '+no;
+    document.getElementById('soal-aspek').value = q.aspek;
+    document.getElementById('soal-pernyataan').value = q.pernyataan;
+    document.getElementById('soal-rumusan').value = q.rumusan;
+  } else {
+    document.getElementById('form-soal-title').textContent = 'Tambah Soal Baru';
+    document.getElementById('soal-aspek').value = 'PRIBADI';
+    document.getElementById('soal-pernyataan').value = '';
+    document.getElementById('soal-rumusan').value = '';
+  }
+  openModal('modal-form-soal');
+}
+
+function submitFormSoal(){
+  const no = document.getElementById('soal-no').value;
+  const pernyataan = document.getElementById('soal-pernyataan').value.trim();
+  if(!pernyataan){ showToast('Pernyataan wajib diisi.', 'err'); return; }
+  const record = {
+    no: no ? Number(no) : null,
+    aspek: document.getElementById('soal-aspek').value,
+    pernyataan: pernyataan,
+    rumusan: document.getElementById('soal-rumusan').value.trim()
+  };
+  google.script.run.withSuccessHandler(res=>{
+    if(!res.success){ showToast(res.message, 'err'); return; }
+    showToast('Soal berhasil disimpan.', 'ok');
+    closeModal('modal-form-soal');
+    gbLoadSoalList();
+  }).withFailureHandler(err=> showToast('Gagal: '+err.message, 'err')).simpanPertanyaan(record);
+}
+
+function gbHapusSoal(no){
+  if(!confirm('Hapus soal No. '+no+'? Jawaban siswa yang sudah tersimpan untuk soal ini tidak akan terhapus, tapi soal ini tidak akan muncul lagi di angket berikutnya.')) return;
+  google.script.run.withSuccessHandler(res=>{
+    if(!res.success){ showToast(res.message, 'err'); return; }
+    showToast('Soal dihapus.', 'ok');
+    gbLoadSoalList();
+  }).withFailureHandler(err=> showToast('Gagal: '+err.message, 'err')).hapusPertanyaan(no);
 }
 
 function gbLoadRekapKelas(){
