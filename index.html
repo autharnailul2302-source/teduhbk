@@ -646,6 +646,8 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <div class="nav-scroll">
     <button class="nav-item active" data-tab="gb-dashboard" onclick="gbShowTab('gb-dashboard')">📊 Dashboard</button>
     <button class="nav-item" data-tab="gb-siswa" onclick="gbShowTab('gb-siswa')">👥 Data Siswa</button>
+    <button class="nav-item" data-tab="gb-alumni" onclick="gbShowTab('gb-alumni')">🎓 Alumni</button>
+    <button class="nav-item" data-tab="gb-riwayat" onclick="gbShowTab('gb-riwayat')">📋 Riwayat Siswa</button>
     <button class="nav-item" data-tab="gb-hasil" onclick="gbShowTab('gb-hasil')">🧾 Hasil AKPD</button>
     <button class="nav-item" onclick="toggleNavGroup('laporan-group')">📁 Laporan<span class="nav-caret" id="laporan-caret">▸</span></button>
     <div class="nav-group" id="laporan-group" style="display:none;">
@@ -747,6 +749,11 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
       </div>
       <div class="filter-bar">
         <select id="filter-kelas-siswa" onchange="gbLoadSiswaList()"><option value="SEMUA">Semua Kelas</option></select>
+        <select id="filter-status-siswa" class="pagesize-select" onchange="gbLoadSiswaList()">
+          <option value="AKTIF">Aktif</option>
+          <option value="LULUS">Alumni (Lulus)</option>
+          <option value="SEMUA">Semua Status</option>
+        </select>
         <input type="text" id="search-siswa" placeholder="Cari nama..." oninput="gbLoadSiswaList()">
         <select id="sort-siswa" class="pagesize-select" onchange="gbRenderSiswaTable()">
           <option value="terbaru">Terbaru lebih dulu</option>
@@ -763,9 +770,15 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
           <option value="ALL">Semua data</option>
         </select>
       </div>
+      <div id="bulk-bar-siswa" class="filter-bar" style="display:none;align-items:center;">
+        <span class="small muted" id="bulk-count-siswa">0 dipilih</span>
+        <button class="btn btn-outline btn-sm" onclick="gbBulkPindahKelas()">⬆️ Naikkan/Pindah Kelas</button>
+        <button class="btn btn-outline btn-sm" onclick="gbBulkLuluskan()">🎓 Luluskan Terpilih</button>
+        <button class="btn btn-outline btn-sm" onclick="gbClearBulkSelection()">Batal Pilih</button>
+      </div>
       <div class="card" style="overflow:auto;">
         <table>
-          <thead><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Status</th><th>Aksi</th></tr></thead>
+          <thead><tr><th style="width:32px;"><input type="checkbox" id="chk-all-siswa" onchange="gbToggleAllSiswa(this)"></th><th>NIS</th><th>Nama</th><th>Kelas</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody id="tbl-siswa"></tbody>
         </table>
         <div class="pagination-bar">
@@ -773,6 +786,36 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
           <div class="pagination-controls" id="pagination-controls-siswa"></div>
         </div>
       </div>
+    </div>
+
+    <!-- ALUMNI -->
+    <div id="gb-alumni" class="tab-panel" style="display:none;">
+      <div class="topbar"><h2>Alumni</h2></div>
+      <p class="muted small">Statistik siswa yang sudah ditandai LULUS — data tetap tersimpan permanen untuk histori/akreditasi, dipisah dari perhitungan siswa aktif.</p>
+      <div id="alumni-summary"></div>
+      <div class="card" style="overflow:auto;margin-top:14px;">
+        <h3 style="margin-top:0;">Jumlah Lulusan per Tahun</h3>
+        <table>
+          <thead><tr><th>Tahun Lulus</th><th>Jumlah</th><th>Laki-laki</th><th>Perempuan</th></tr></thead>
+          <tbody id="tbl-alumni-tahun"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RIWAYAT SISWA -->
+    <div id="gb-riwayat" class="tab-panel" style="display:none;">
+      <div class="topbar"><h2>Riwayat Siswa</h2></div>
+      <p class="muted small">Rekam jejak layanan BK satu siswa dalam satu tempat: hasil AKPD, konseling, kunjungan rumah, catatan anekdot, dan observasi — diurutkan dari yang terbaru.</p>
+      <div class="filter-bar">
+        <select id="riwayat-kelas" onchange="gbLoadRiwayatSiswaSelect()"><option value="SEMUA">Semua Kelas</option></select>
+        <select id="riwayat-status" onchange="gbLoadRiwayatSiswaSelect()">
+          <option value="AKTIF">Siswa Aktif</option>
+          <option value="LULUS">Alumni</option>
+          <option value="SEMUA">Semua</option>
+        </select>
+        <select id="riwayat-siswa-select" onchange="gbLoadRiwayatSiswa()"><option value="">— Pilih siswa —</option></select>
+      </div>
+      <div id="riwayat-content"></div>
     </div>
 
     <!-- HASIL AKPD PER SISWA -->
@@ -979,8 +1022,15 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
           <option value="Bimbingan Kelompok">Bimbingan Kelompok</option>
           <option value="Bimbingan Klasikal">Bimbingan Klasikal</option>
         </select>
+        <select id="filter-status-konseling" onchange="gbLoadKonselingList()">
+          <option value="SEMUA">Semua Status</option>
+          <option value="Proses">Proses</option>
+          <option value="Selesai">Selesai</option>
+          <option value="Dirujuk">Dirujuk</option>
+        </select>
         <button class="btn btn-teal btn-sm" onclick="gbExportKonselingWord()">📄 Unduh Word (Rekap Kelas)</button>
       </div>
+      <div id="konseling-statistik"></div>
       <div id="konseling-list"></div>
     </div>
 
@@ -1768,6 +1818,17 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
       <div id="konseling-siswa-checklist" class="checklist-box"><p class="muted small">Pilih kelas terlebih dahulu untuk menampilkan daftar siswa.</p></div></div>
     <div class="field"><label>Topik</label>
       <input id="konseling-topik" placeholder="Contoh: Pengenalan BK"></div>
+    <div class="grid grid-2">
+      <div class="field"><label>Status Penanganan</label>
+        <select id="konseling-status">
+          <option value="Proses">Proses</option>
+          <option value="Selesai">Selesai</option>
+          <option value="Dirujuk">Dirujuk</option>
+        </select>
+      </div>
+      <div class="field"><label>Hasil / Tindak Lanjut</label>
+        <input id="konseling-hasil" placeholder="Contoh: Siswa menunjukkan perbaikan sikap"></div>
+    </div>
     <div style="display:flex;gap:8px;margin-top:6px;">
       <button class="btn btn-outline btn-block" onclick="closeModal('modal-konseling')">Batal</button>
       <button class="btn btn-primary btn-block" onclick="submitKonseling()">Simpan Catatan</button>
@@ -3113,6 +3174,9 @@ function gbShowTab(tab){
     document.getElementById('laporan-caret').classList.add('open');
   }
   if(tab==='gb-siswa') gbLoadSiswaList();
+  if(tab==='gb-alumni') gbLoadAlumniStatistik();
+  if(tab==='gb-riwayat' && !RIWAYAT_OPEN_DIRECT) gbLoadRiwayatSiswaSelect();
+  RIWAYAT_OPEN_DIRECT = false;
   if(tab==='gb-rekap') gbLoadRekapKelas();
   if(tab==='gb-mingguan') gbLoadMingguanList();
   if(tab==='gb-bulanan') gbLoadBulananList();
@@ -3228,7 +3292,7 @@ function gbPopulateKelasFilters(){
   google.script.run.withSuccessHandler(list=>{
     const names = list.map(k=>k.NamaKelas);
     KELAS_NAMES_CACHE = names;
-    ['filter-kelas-siswa','filter-kelas-hasil','filter-kelas-rekap','filter-kelas-eatl','filter-kelas-anekdot','filter-kelas-sosio','filter-kelas-hv','filter-kelas-biblio','filter-kelas-observasi','filter-kelas-konseling','filter-kelas-mingguan','filter-kelas-bulanan','filter-kelas-tahunan'].forEach(id=>{
+    ['filter-kelas-siswa','filter-kelas-hasil','filter-kelas-rekap','filter-kelas-eatl','filter-kelas-anekdot','filter-kelas-sosio','filter-kelas-hv','filter-kelas-biblio','filter-kelas-observasi','filter-kelas-konseling','filter-kelas-mingguan','filter-kelas-bulanan','filter-kelas-tahunan','riwayat-kelas'].forEach(id=>{
       const sel = document.getElementById(id);
       const keepFirst = id !== 'filter-kelas-rekap' && id !== 'filter-kelas-sosio';
       sel.innerHTML = (keepFirst ? '<option value="SEMUA">Semua Kelas</option>' : '') +
@@ -3301,16 +3365,20 @@ function gbPopulateKelasFilters(){
 
 let SISWA_DATA_CACHE = [];
 let SISWA_CURRENT_PAGE = 1;
+let SISWA_SELECTED = {};
 
 function gbLoadSiswaList(){
   const kelas = document.getElementById('filter-kelas-siswa').value;
+  const status = document.getElementById('filter-status-siswa').value;
   const search = document.getElementById('search-siswa').value.toLowerCase();
+  SISWA_SELECTED = {};
+  gbUpdateBulkBar();
   google.script.run.withSuccessHandler(list=>{
     list.forEach((s,i)=>{ s._idx = i; });
     if(search) list = list.filter(s=> (s.Nama||'').toLowerCase().includes(search));
     SISWA_DATA_CACHE = list;
     gbRenderSiswaTable(1);
-  }).getDaftarSiswa(kelas);
+  }).getDaftarSiswa(kelas, status);
 }
 
 function gbRenderSiswaTable(resetPage){
@@ -3339,17 +3407,21 @@ function gbRenderSiswaTable(resetPage){
 
   const tbl = document.getElementById('tbl-siswa');
   tbl.innerHTML = pageList.map(s=>
-    '<tr><td>'+s.NIS+'</td><td>'+s.Nama+'</td><td>'+s.Kelas+'</td>'+
+    '<tr><td><input type="checkbox" class="chk-siswa-row" data-id="'+s.ID+'" '+(SISWA_SELECTED[s.ID]?'checked':'')+' onchange="gbToggleSiswaRow(\''+s.ID+'\', this.checked)"></td>'+
+    '<td>'+s.NIS+'</td><td>'+s.Nama+'</td><td>'+s.Kelas+'</td>'+
     '<td>'+(s.StatusIsi==='SUDAH' ? '<span class="badge badge-green">AKPD ✓</span>' : '<span class="badge badge-red">AKPD ✗</span>')+' '+
       (s.StatusSosio==='SUDAH' ? '<span class="badge badge-green">Sosio ✓</span>' : '<span class="badge badge-red">Sosio ✗</span>')+
       (s.StatusLulus==='LULUS' ? ' <span class="badge badge-green">🎓 Lulus'+(s.TahunLulus ? ' '+s.TahunLulus : '')+'</span>' : '')+'</td>'+
     '<td>'+
       '<button class="btn btn-sm btn-outline" onclick="gbOpenEditSiswa(\''+s.ID+'\')">✏️ Edit</button> '+
+      '<button class="btn btn-sm btn-outline" onclick="gbBukaRiwayatSiswa(\''+s.ID+'\')">📋 Riwayat</button> '+
       (s.StatusIsi==='SUDAH' && s.Terkunci!=='BUKA' ? '<button class="btn btn-sm btn-outline" onclick="gbBukaAkses(\''+s.ID+'\')">🔓 AKPD</button> ' : '')+
       (s.StatusSosio==='SUDAH' && s.TerkunciSosio!=='BUKA' ? '<button class="btn btn-sm btn-outline" onclick="gbBukaAksesSosio(\''+s.ID+'\')">🔓 Sosio</button> ' : '')+
       '<button class="btn btn-sm btn-danger" onclick="gbHapusSiswa(\''+s.ID+'\')">Hapus</button>'+
     '</td></tr>'
-  ).join('') || '<tr><td colspan="5" class="muted" style="text-align:center;padding:24px;">Belum ada data siswa.</td></tr>';
+  ).join('') || '<tr><td colspan="6" class="muted" style="text-align:center;padding:24px;">Belum ada data siswa.</td></tr>';
+  const chkAll = document.getElementById('chk-all-siswa');
+  if(chkAll) chkAll.checked = pageList.length > 0 && pageList.every(s=> SISWA_SELECTED[s.ID]);
 
   document.getElementById('pagination-info-siswa').textContent = total === 0
     ? 'Tidak ada data'
@@ -3361,6 +3433,146 @@ function gbRenderSiswaTable(resetPage){
 function gbGotoSiswaPage(p){
   SISWA_CURRENT_PAGE = p;
   gbRenderSiswaTable();
+}
+
+function gbUpdateBulkBar(){
+  const n = Object.keys(SISWA_SELECTED).length;
+  document.getElementById('bulk-bar-siswa').style.display = n > 0 ? 'flex' : 'none';
+  document.getElementById('bulk-count-siswa').textContent = n + ' dipilih';
+}
+
+function gbToggleSiswaRow(id, checked){
+  if(checked) SISWA_SELECTED[id] = true; else delete SISWA_SELECTED[id];
+  gbUpdateBulkBar();
+  const chkAll = document.getElementById('chk-all-siswa');
+  if(chkAll && !checked) chkAll.checked = false;
+}
+
+function gbToggleAllSiswa(chkAll){
+  document.querySelectorAll('.chk-siswa-row').forEach(el=>{
+    el.checked = chkAll.checked;
+    const id = el.getAttribute('data-id');
+    if(chkAll.checked) SISWA_SELECTED[id] = true; else delete SISWA_SELECTED[id];
+  });
+  gbUpdateBulkBar();
+}
+
+function gbClearBulkSelection(){
+  SISWA_SELECTED = {};
+  gbRenderSiswaTable();
+  gbUpdateBulkBar();
+}
+
+function gbBulkLuluskan(){
+  const ids = Object.keys(SISWA_SELECTED);
+  if(!ids.length) return;
+  const tahun = prompt('Tandai '+ids.length+' siswa terpilih sebagai LULUS.\nIsi tahun lulus (contoh: 2026):', new Date().getFullYear());
+  if(tahun === null) return;
+  if(!tahun.trim()){ showToast('Tahun lulus wajib diisi.', 'err'); return; }
+  google.script.run.withSuccessHandler(res=>{
+    showToast(res.jumlah+' siswa ditandai LULUS.', 'ok');
+    gbClearBulkSelection();
+    gbLoadSiswaList();
+  }).withFailureHandler(err=> showToast('Gagal: '+err.message, 'err')).luluskanSiswaBulk(ids, tahun.trim());
+}
+
+function gbBulkPindahKelas(){
+  const ids = Object.keys(SISWA_SELECTED);
+  if(!ids.length) return;
+  const opsi = KELAS_NAMES_CACHE && KELAS_NAMES_CACHE.length ? '\n(Kelas tersedia: '+KELAS_NAMES_CACHE.join(', ')+')' : '';
+  const kelasBaru = prompt('Pindahkan/naikkan '+ids.length+' siswa terpilih ke kelas:'+opsi, '');
+  if(kelasBaru === null) return;
+  if(!kelasBaru.trim()){ showToast('Nama kelas wajib diisi.', 'err'); return; }
+  google.script.run.withSuccessHandler(res=>{
+    showToast(res.jumlah+' siswa dipindahkan ke kelas '+kelasBaru.trim()+'.', 'ok');
+    gbClearBulkSelection();
+    gbLoadSiswaList();
+  }).withFailureHandler(err=> showToast('Gagal: '+err.message, 'err')).pindahKelasBulk(ids, kelasBaru.trim());
+}
+
+/*************************************************************
+ * ALUMNI
+ *************************************************************/
+function gbLoadAlumniStatistik(){
+  const box = document.getElementById('alumni-summary');
+  box.innerHTML = '<p class="muted">Memuat...</p>';
+  google.script.run.withSuccessHandler(d=>{
+    box.innerHTML = '<div class="card" style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">'+
+      '<div><div class="small muted">Total Alumni Tercatat</div><div style="font-size:26px;font-weight:700;">'+d.totalAlumni+'</div></div>'+
+      '<div style="flex:1;min-width:260px;"><div class="small muted" style="margin-bottom:6px;">Kebutuhan Tertinggi Historis Alumni (dari data AKPD)</div>'+
+      '<div id="alumni-chart-kebutuhan"></div></div></div>';
+    renderBarChart('alumni-chart-kebutuhan', d.kebutuhanHistoris.map(k=>({label:ASPEK_LABEL[k.aspek], value:k.persen, color:ASPEK_COLOR[k.aspek]})));
+    const tbl = document.getElementById('tbl-alumni-tahun');
+    tbl.innerHTML = d.perTahun.length ? d.perTahun.map(t=>
+      '<tr><td>'+t.tahun+'</td><td>'+t.jumlah+'</td><td>'+t.lakiLaki+'</td><td>'+t.perempuan+'</td></tr>'
+    ).join('') : '<tr><td colspan="4" class="muted" style="text-align:center;padding:20px;">Belum ada alumni tercatat.</td></tr>';
+  }).getStatistikAlumni();
+}
+
+/*************************************************************
+ * RIWAYAT SISWA
+ *************************************************************/
+let RIWAYAT_OPEN_DIRECT = false;
+let RIWAYAT_SISWA_LIST_CACHE = [];
+
+function gbLoadRiwayatSiswaSelect(preselectId){
+  const kelas = document.getElementById('riwayat-kelas').value;
+  const status = document.getElementById('riwayat-status').value;
+  google.script.run.withSuccessHandler(list=>{
+    RIWAYAT_SISWA_LIST_CACHE = list;
+    const sel = document.getElementById('riwayat-siswa-select');
+    sel.innerHTML = '<option value="">— Pilih siswa —</option>' +
+      list.map(s=> '<option value="'+s.ID+'">'+s.Nama+' ('+s.Kelas+(s.StatusLulus==='LULUS'?' — Alumni':'')+')</option>').join('');
+    if(preselectId){ sel.value = preselectId; gbLoadRiwayatSiswa(); }
+    else document.getElementById('riwayat-content').innerHTML = '<p class="muted small">Pilih siswa untuk melihat riwayat BK-nya.</p>';
+  }).getDaftarSiswa(kelas, status);
+}
+
+function gbBukaRiwayatSiswa(id){
+  RIWAYAT_OPEN_DIRECT = true;
+  gbShowTab('gb-riwayat');
+  document.getElementById('riwayat-kelas').value = 'SEMUA';
+  document.getElementById('riwayat-status').value = 'SEMUA';
+  gbLoadRiwayatSiswaSelect(id);
+}
+
+function gbLoadRiwayatSiswa(){
+  const id = document.getElementById('riwayat-siswa-select').value;
+  const wrap = document.getElementById('riwayat-content');
+  if(!id){ wrap.innerHTML = '<p class="muted small">Pilih siswa untuk melihat riwayat BK-nya.</p>'; return; }
+  wrap.innerHTML = '<p class="muted">Memuat...</p>';
+  google.script.run.withSuccessHandler(d=>{
+    if(!d){ wrap.innerHTML = '<p class="muted">Data siswa tidak ditemukan.</p>'; return; }
+    const s = d.siswa;
+    const akpdBlok = d.akpd && d.akpd.sudahIsi
+      ? '<p class="small">'+d.akpd.kesimpulan+'</p>'
+      : '<p class="small muted">Belum mengisi AKPD.</p>';
+    const r = d.ringkasan;
+    const timelineHtml = d.timeline.length ? d.timeline.map(t=>{
+      const statusBadge = t.status ? ' <span class="badge '+(t.status==='Selesai'?'badge-green':t.status==='Dirujuk'?'badge-amber':'badge-red')+'">'+t.status+'</span>' : '';
+      return '<div class="eatl-card">'+
+        '<div><span class="eatl-tag">'+t.kategori+'</span>'+statusBadge+
+        (t.tanggal ? ' <span class="small muted">'+t.tanggal+'</span>' : '')+'</div>'+
+        '<b>'+(t.tipe||'')+'</b>'+
+        (t.topik ? '<p class="small" style="margin-top:4px;">'+t.topik+'</p>' : '')+
+        (t.hasil ? '<p class="small muted" style="margin-top:2px;"><b>Hasil/tindak lanjut:</b> '+t.hasil+'</p>' : '')+
+      '</div>';
+    }).join('') : '<div class="card empty-state"><div class="icon">📋</div><h3>Belum ada catatan layanan</h3><p>Konseling, kunjungan rumah, anekdot, dan observasi untuk siswa ini akan tampil di sini.</p></div>';
+
+    wrap.innerHTML =
+      '<div class="card">'+
+        '<h3 style="margin-top:0;">'+s.Nama+' <span class="small muted">('+s.NIS+' &middot; '+s.Kelas+(s.StatusLulus==='LULUS'?' &middot; 🎓 Alumni '+(s.TahunLulus||''):'')+')</span></h3>'+
+        akpdBlok+
+      '</div>'+
+      '<div class="card" style="display:flex;gap:20px;flex-wrap:wrap;margin-top:12px;">'+
+        '<div><div class="small muted">Konseling</div><div style="font-weight:700;">'+r.totalKonseling+' ('+r.konselingSelesai+' selesai)</div></div>'+
+        '<div><div class="small muted">Kunjungan Rumah</div><div style="font-weight:700;">'+r.totalHomeVisit+'</div></div>'+
+        '<div><div class="small muted">Catatan Anekdot</div><div style="font-weight:700;">'+r.totalAnekdot+'</div></div>'+
+        '<div><div class="small muted">Observasi</div><div style="font-weight:700;">'+r.totalObservasi+'</div></div>'+
+      '</div>'+
+      '<h3 style="margin-top:16px;">Timeline Layanan</h3>'+
+      timelineHtml;
+  }).getRiwayatSiswa(id);
 }
 
 function gbBuildPagerHtml(current, totalPages, fnName){
@@ -4191,19 +4403,24 @@ function gbLoadKonselingList(){
   const kelas = document.getElementById('filter-kelas-konseling').value;
   const semester = document.getElementById('filter-semester-konseling').value;
   const layanan = document.getElementById('filter-layanan-konseling').value;
+  const status = document.getElementById('filter-status-konseling').value;
   const wrap = document.getElementById('konseling-list');
   wrap.innerHTML = '<p class="muted">Memuat...</p>';
+  const filter = {kelas: kelas, semester: semester, layanan: layanan, status: status};
   google.script.run.withSuccessHandler(list=>{
     if(!list.length){
       wrap.innerHTML = '<div class="card empty-state"><div class="icon">🗂️</div>'+
         '<h3>Belum ada catatan</h3><p>Klik "+ Tambah Catatan" untuk mulai mencatat Daftar Konseling.</p></div>';
       return;
     }
+    const statusBadge = { 'Selesai':'badge-green', 'Proses':'badge-red', 'Dirujuk':'badge-amber' };
     wrap.innerHTML = list.map(r=>{
       const namaTampil = (r.NamaSiswa||'').split('\n').filter(Boolean).join(', ');
+      const st = r.StatusPenanganan || 'Proses';
       return '<div class="eatl-card">'+
         '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">'+
-          '<div><span class="eatl-tag">'+(r.Layanan||'-')+'</span><br>'+
+          '<div><span class="eatl-tag">'+(r.Layanan||'-')+'</span> '+
+          '<span class="badge '+(statusBadge[st]||'badge-red')+'">'+st+'</span><br>'+
           '<b>'+(r.Topik||'')+'</b> &middot; Kelas '+r.Kelas+' &middot; '+(r.Semester||'')+' '+(r.TahunAjaran||'')+
           (r.TanggalPelaksanaan? ' &middot; '+r.TanggalPelaksanaan : '')+'</div>'+
           '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+
@@ -4212,17 +4429,29 @@ function gbLoadKonselingList(){
           '</div>'+
         '</div>'+
         '<p class="small muted" style="margin-top:8px;">'+ namaTampil.substring(0,140) + (namaTampil.length>140?'...':'') +'</p>'+
+        (r.HasilTindakLanjut ? '<p class="small" style="margin-top:4px;"><b>Hasil/Tindak lanjut:</b> '+r.HasilTindakLanjut+'</p>' : '')+
       '</div>';
     }).join('');
-  }).getDaftarKonseling({kelas: kelas, semester: semester, layanan: layanan});
+  }).getDaftarKonseling(filter);
+
+  google.script.run.withSuccessHandler(stat=>{
+    const box = document.getElementById('konseling-statistik');
+    if(!stat.total){ box.innerHTML=''; return; }
+    box.innerHTML = '<div class="card" style="display:flex;gap:22px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">'+
+      '<div><div class="small muted">Total Kasus</div><div style="font-size:22px;font-weight:700;">'+stat.total+'</div></div>'+
+      '<div><div class="small muted">Selesai Ditangani</div><div style="font-size:22px;font-weight:700;color:#16a34a;">'+stat.persenSelesai+'%</div></div>'+
+      stat.perStatus.map(s=>'<div><div class="small muted">'+s.status+'</div><div style="font-size:18px;font-weight:600;">'+s.jumlah+'</div></div>').join('')+
+    '</div>';
+  }).getStatistikKonseling(filter);
 }
 
 function openModalKonseling(){
   document.getElementById('konseling-modal-title').textContent = 'Tambah Catatan Konseling';
-  ['konseling-id','konseling-kelas','konseling-tahun','konseling-tanggal','konseling-topik']
+  ['konseling-id','konseling-kelas','konseling-tahun','konseling-tanggal','konseling-topik','konseling-hasil']
     .forEach(id=> document.getElementById(id).value = '');
   document.getElementById('konseling-layanan').value = 'Konseling Kelompok';
   document.getElementById('konseling-semester').value = 'Ganjil';
+  document.getElementById('konseling-status').value = 'Proses';
   konselingRefreshSiswaList();
   openModal('modal-konseling');
 }
@@ -4239,6 +4468,8 @@ function gbEditKonseling(id){
     konselingRefreshSiswaList((r.NamaSiswa||'').split('\n').map(s=>s.trim()).filter(Boolean));
     document.getElementById('konseling-tanggal').value = r.TanggalPelaksanaan || '';
     document.getElementById('konseling-topik').value = r.Topik || '';
+    document.getElementById('konseling-status').value = r.StatusPenanganan || 'Proses';
+    document.getElementById('konseling-hasil').value = r.HasilTindakLanjut || '';
     openModal('modal-konseling');
   }).getKonselingById(id);
 }
@@ -4252,7 +4483,9 @@ function submitKonseling(){
     Semester: document.getElementById('konseling-semester').value,
     TahunAjaran: document.getElementById('konseling-tahun').value.trim(),
     TanggalPelaksanaan: document.getElementById('konseling-tanggal').value,
-    Topik: document.getElementById('konseling-topik').value.trim()
+    Topik: document.getElementById('konseling-topik').value.trim(),
+    StatusPenanganan: document.getElementById('konseling-status').value,
+    HasilTindakLanjut: document.getElementById('konseling-hasil').value.trim()
   };
   if(!record.NamaSiswa || !record.Kelas || !record.Topik){
     showToast('Daftar Nama, Kelas, dan Topik wajib diisi.', 'err'); return;
