@@ -125,10 +125,20 @@ input,select,textarea{font-family:inherit;}
 /* ---------- APP SHELL ---------- */
 .app-shell{display:flex;min-height:100vh;}
 .sidebar{width:230px;background:var(--grad-navy);color:#fff;flex-shrink:0;padding:24px 16px;
-  display:flex;flex-direction:column;box-shadow:4px 0 20px rgba(0,0,0,.12);}
+  display:flex;flex-direction:column;box-shadow:4px 0 20px rgba(0,0,0,.12);
+  position:sticky;top:0;align-self:flex-start;height:100vh;overflow:hidden;}
 .sidebar h3{font-size:15px;line-height:1.4;margin-bottom:2px;font-weight:700;}
 .sidebar .role-badge{font-size:11px;background:var(--grad-brand);display:inline-block;padding:3px 10px;
-  border-radius:20px;margin-bottom:22px;font-weight:600;}
+  border-radius:20px;font-weight:600;}
+.sidebar-user{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;
+  margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.12);flex-shrink:0;}
+.sidebar-logout-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#ffb4bd;
+  width:34px;height:34px;border-radius:10px;font-size:15px;cursor:pointer;transition:.18s;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;}
+.sidebar-logout-btn:hover{background:#fdeaec;color:var(--red);border-color:#fdeaec;transform:translateY(-1px);}
+.nav-scroll{flex:1;overflow-y:auto;padding-right:4px;margin-right:-4px;}
+.nav-scroll::-webkit-scrollbar{width:5px;}
+.nav-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:10px;}
 .nav-item{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:10px;color:#aab4cc;
   font-size:13.5px;font-weight:500;margin-bottom:4px;background:transparent;border:none;width:100%;text-align:left;
   transition:.18s;}
@@ -138,7 +148,7 @@ input,select,textarea{font-family:inherit;}
 .nav-sub{padding-left:30px;font-size:12.5px;}
 .nav-caret{margin-left:auto;font-size:10px;opacity:.7;transition:transform .18s;}
 .nav-caret.open{transform:rotate(90deg);}
-.sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);}
+.sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);flex-shrink:0;}
 .main{flex:1;padding:28px 32px;max-width:calc(100vw - 230px);}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:10px;}
 .topbar h2{font-size:22px;color:var(--navy);font-weight:800;}
@@ -153,7 +163,10 @@ input,select,textarea{font-family:inherit;}
 .grid-2{grid-template-columns:repeat(2,1fr);}
 @media(max-width:900px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr 1fr;}}
 @media(max-width:600px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr;} .main{max-width:100vw;padding:18px;}
-  .app-shell{flex-direction:column;} .sidebar{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;}
+  .app-shell{flex-direction:column;}
+  .sidebar{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;position:static;height:auto;overflow:visible;}
+  .sidebar-user{width:100%;}
+  .nav-scroll{overflow:visible;width:100%;display:flex;flex-wrap:wrap;}
   .sidebar-footer{margin-top:0;border:none;padding:0;} .nav-item{width:auto;}}
 
 .stat-card{padding:19px;position:relative;overflow:hidden;}
@@ -161,6 +174,12 @@ input,select,textarea{font-family:inherit;}
 .stat-card .label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
 .stat-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;
   font-size:19px;margin-bottom:11px;}
+.stat-mini{border-top:4px solid var(--border);}
+.stat-mini .num{display:flex;align-items:center;gap:8px;}
+.stat-mini .num span{font-size:19px;}
+.stat-mini.mini-navy{border-top-color:var(--indigo);}
+.stat-mini.mini-green{border-top-color:var(--green);}
+.stat-mini.mini-red{border-top-color:var(--red);}
 
 /* ---------- BARS ---------- */
 .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:13px;}
@@ -191,7 +210,7 @@ tr:hover td{background:#fafbff;}
   font-size:24px;margin-bottom:12px;}
 .instrumen-icon.icon-amber{background:linear-gradient(135deg,#fef3e2,#fde3b8);}
 .instrumen-icon.icon-teal{background:linear-gradient(135deg,#e6f9f6,#c7f0e9);}
-.instrumen-card h3{font-size:16px;margin-bottom:4px;color:var(--navy);font-weight:800;}
+.card.instrumen-card h3{font-size:16px;margin-bottom:4px;color:var(--navy);font-weight:800;}
 .instrumen-card p{margin-bottom:14px;}
 .instrumen-arrow{position:absolute;top:20px;right:16px;font-size:18px;color:var(--border);transition:.2s;}
 .instrumen-card:hover .instrumen-arrow{color:var(--muted);transform:translateX(3px);}
@@ -246,8 +265,12 @@ tr:hover td{background:#fafbff;}
 .step-dot.done{background:var(--teal);color:#fff;}
 
 .center-wrap{max-width:640px;margin:0 auto;padding:30px 18px;}
-.empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
-.empty-state .icon{font-size:44px;margin-bottom:10px;}
+.empty-state{text-align:center;padding:56px 20px;color:var(--muted);}
+.empty-state.card{background:var(--bg-soft);border:1.5px dashed #c9d0e6;box-shadow:none;}
+.empty-state .icon{font-size:38px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;
+  width:80px;height:80px;border-radius:50%;background:#fff;box-shadow:var(--shadow-sm);}
+.empty-state h3{font-size:16.5px;color:var(--navy);margin-bottom:6px;font-weight:800;}
+.empty-state p{font-size:13.5px;}
 
 .modal-bg{position:fixed;inset:0;background:rgba(15,20,35,.72);display:none;
   align-items:center;justify-content:center;z-index:100;padding:16px;}
@@ -255,6 +278,11 @@ tr:hover td{background:#fafbff;}
 .modal{background:#fff;border-radius:18px;padding:26px;width:100%;max-width:460px;max-height:88vh;overflow:auto;
   box-shadow:var(--shadow-lg);}
 .modal.modal-lg{max-width:760px;}
+.modal h3{font-size:17px;color:var(--navy);font-weight:800;padding-bottom:14px;margin-bottom:18px;
+  border-bottom:1.5px solid var(--border);}
+.card h3{color:var(--navy);font-size:15.5px;font-weight:800;margin-bottom:12px;}
+.card h3.small{font-size:11.5px;font-weight:700;margin-bottom:10px;}
+input[type=checkbox]{accent-color:var(--indigo);width:15px;height:15px;cursor:pointer;vertical-align:middle;}
 
 .toast{position:fixed;top:18px;right:18px;background:var(--navy-dk);color:#fff;padding:13px 19px;
   border-radius:12px;font-size:13.5px;box-shadow:0 10px 28px rgba(0,0,0,.28);transform:translateY(-100px);
@@ -279,7 +307,15 @@ tr:hover td{background:#fafbff;}
 .page-btn:disabled{opacity:.4;cursor:not-allowed;}
 .page-ellipsis{padding:0 4px;color:var(--muted);}
 .pagesize-select{padding:7px 10px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;background:#fff;}
-.filter-bar select,.filter-bar input{padding:9px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:13.5px;}
+.filter-bar select,.pagesize-select{
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7488' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer;}
+.filter-bar select{padding:9px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:13.5px;
+  background-color:#fff;color:var(--text);font-weight:600;transition:.18s;}
+.filter-bar select:hover{border-color:var(--indigo-lt);}
+.filter-bar select:focus{outline:none;border-color:var(--indigo);box-shadow:0 0 0 3px rgba(79,91,213,.14);}
+.filter-bar input{padding:9px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:13.5px;}
 
 /* ---------- EATL ---------- */
 .eatl-card{border-radius:14px;border:1.5px solid var(--border);padding:16px 18px;margin-bottom:12px;
@@ -534,8 +570,14 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
 <div id="view-gurubk" class="view">
 <div class="app-shell">
   <div class="sidebar">
-    <h3>Portal Guru BK</h3>
-    <span class="role-badge" id="gb-name-badge">-</span>
+    <div class="sidebar-user">
+      <div>
+        <h3>Portal Guru BK</h3>
+        <span class="role-badge" id="gb-name-badge">-</span>
+      </div>
+      <button class="sidebar-logout-btn" onclick="logout()" title="Keluar">🚪</button>
+    </div>
+    <div class="nav-scroll">
     <button class="nav-item active" data-tab="gb-dashboard" onclick="gbShowTab('gb-dashboard')">📊 Dashboard</button>
     <button class="nav-item" data-tab="gb-siswa" onclick="gbShowTab('gb-siswa')">👥 Data Siswa</button>
     <button class="nav-item" data-tab="gb-hasil" onclick="gbShowTab('gb-hasil')">🧾 Hasil AKPD</button>
@@ -559,8 +601,6 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <button class="nav-item" data-tab="gb-progsemester" onclick="gbShowTab('gb-progsemester')">📆 Program Semester</button>
     <button class="nav-item" data-tab="gb-peta" onclick="gbShowTab('gb-peta')">🗺️ Peta Siswa</button>
     <button class="nav-item" data-tab="gb-petakelas" onclick="gbShowTab('gb-petakelas')">🪑 Peta Kelas</button>
-    <div class="sidebar-footer">
-      <button class="nav-item" onclick="logout()">🚪 Keluar</button>
     </div>
   </div>
 
@@ -1840,11 +1880,15 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
 <div id="view-kepsek" class="view">
 <div class="app-shell">
   <div class="sidebar">
-    <h3>Portal Kepala Sekolah</h3>
-    <span class="role-badge">Read-only</span>
+    <div class="sidebar-user">
+      <div>
+        <h3>Portal Kepala Sekolah</h3>
+        <span class="role-badge">Read-only</span>
+      </div>
+      <button class="sidebar-logout-btn" onclick="logout()" title="Keluar">🚪</button>
+    </div>
+    <div class="nav-scroll">
     <button class="nav-item active">📊 Statistik Sekolah</button>
-    <div class="sidebar-footer">
-      <button class="nav-item" onclick="logout()">🚪 Keluar</button>
     </div>
   </div>
   <div class="main">
@@ -1884,14 +1928,18 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
 <div id="view-admin" class="view">
 <div class="app-shell">
   <div class="sidebar">
-    <h3>Portal Admin</h3>
-    <span class="role-badge">Administrator</span>
+    <div class="sidebar-user">
+      <div>
+        <h3>Portal Admin</h3>
+        <span class="role-badge">Administrator</span>
+      </div>
+      <button class="sidebar-logout-btn" onclick="logout()" title="Keluar">🚪</button>
+    </div>
+    <div class="nav-scroll">
     <button class="nav-item active" data-tab="ad-guru" onclick="adShowTab('ad-guru')">🧑‍🏫 Kelola Guru BK</button>
     <button class="nav-item" data-tab="ad-kelas" onclick="adShowTab('ad-kelas')">🏫 Kelola Kelas</button>
     <button class="nav-item" data-tab="ad-tahun" onclick="adShowTab('ad-tahun')">📅 Tahun Ajaran</button>
     <button class="nav-item" data-tab="ad-backup" onclick="adShowTab('ad-backup')">💾 Backup Data</button>
-    <div class="sidebar-footer">
-      <button class="nav-item" onclick="logout()">🚪 Keluar</button>
     </div>
   </div>
 
@@ -2826,9 +2874,9 @@ function gbLoadSosioAnalysis(){
   wrap.innerHTML = '<p class="muted">Memuat...</p>';
   google.script.run.withSuccessHandler(a=>{
     let html = '<div class="grid grid-3" style="margin-bottom:16px;">'+
-      '<div class="card stat-card"><div class="num">'+a.jumlahSiswa+'</div><div class="label">Total Siswa</div></div>'+
-      '<div class="card stat-card"><div class="num">'+a.sudahIsi+'</div><div class="label">Sudah Isi</div></div>'+
-      '<div class="card stat-card"><div class="num">'+a.belumIsi+'</div><div class="label">Belum Isi</div></div>'+
+      '<div class="card stat-card stat-mini mini-navy"><div class="num"><span>👥</span>'+a.jumlahSiswa+'</div><div class="label">Total Siswa</div></div>'+
+      '<div class="card stat-card stat-mini mini-green"><div class="num"><span>✅</span>'+a.sudahIsi+'</div><div class="label">Sudah Isi</div></div>'+
+      '<div class="card stat-card stat-mini mini-red"><div class="num"><span>⏳</span>'+a.belumIsi+'</div><div class="label">Belum Isi</div></div>'+
     '</div>';
 
     html += '<div class="grid grid-2">';
@@ -3418,9 +3466,9 @@ function gbLoadRekapKelas(){
     REKAP_KELAS_CACHE = r;
     document.getElementById('rekap-wrap').innerHTML =
       '<div class="grid grid-3" style="margin-bottom:16px;">'+
-        '<div class="card stat-card"><div class="num">'+r.jumlahSiswa+'</div><div class="label">Total Siswa</div></div>'+
-        '<div class="card stat-card"><div class="num">'+r.sudahIsi+'</div><div class="label">Sudah Isi</div></div>'+
-        '<div class="card stat-card"><div class="num">'+r.belumIsi+'</div><div class="label">Belum Isi</div></div>'+
+        '<div class="card stat-card stat-mini mini-navy"><div class="num"><span>👥</span>'+r.jumlahSiswa+'</div><div class="label">Total Siswa</div></div>'+
+        '<div class="card stat-card stat-mini mini-green"><div class="num"><span>✅</span>'+r.sudahIsi+'</div><div class="label">Sudah Isi</div></div>'+
+        '<div class="card stat-card stat-mini mini-red"><div class="num"><span>⏳</span>'+r.belumIsi+'</div><div class="label">Belum Isi</div></div>'+
       '</div>'+
       '<div class="card"><h3>Kebutuhan Terbesar — Kelas '+r.kelas+'</h3><div style="margin-top:12px;">'+
         r.kebutuhanTertinggi.map((k,i)=> '<div class="bar-row"><div class="bar-label">'+(i+1)+'. '+ASPEK_LABEL[k.aspek]+'</div>'+
