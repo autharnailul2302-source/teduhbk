@@ -169,6 +169,11 @@ input,select,textarea{font-family:inherit;}
 .main-topnav-name{font-size:13.5px;font-weight:700;color:var(--navy);}
 .main-topnav-role{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
 .main-topnav-divider{width:1px;height:28px;background:var(--border);}
+.main-topnav-help{width:34px;height:34px;border-radius:10px;background:var(--bg-soft);
+  border:1.5px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;
+  transition:.18s;flex-shrink:0;}
+.main-topnav-help svg{width:16px;height:16px;stroke:currentColor;}
+.main-topnav-help:hover{border-color:var(--indigo);color:var(--indigo);background:#eef1fb;}
 .main-topnav-logout{display:flex;align-items:center;gap:7px;background:#fff;border:1.5px solid var(--border);
   color:var(--muted);padding:8px 14px;border-radius:10px;font-size:12.5px;font-weight:700;transition:.18s;}
 .main-topnav-logout svg{width:15px;height:15px;stroke:currentColor;flex-shrink:0;}
@@ -181,7 +186,11 @@ input,select,textarea{font-family:inherit;}
   justify-content:center;z-index:300;padding:16px;}
 .welcome-overlay.active{display:flex;animation:fadeIn .25s ease;}
 .welcome-box{background:#fff;border-radius:22px;max-width:640px;width:100%;max-height:90vh;overflow:auto;
-  box-shadow:var(--shadow-lg);}
+  box-shadow:var(--shadow-lg);scrollbar-width:thin;scrollbar-color:rgba(79,91,213,.35) transparent;}
+.welcome-box::-webkit-scrollbar{width:6px;}
+.welcome-box::-webkit-scrollbar-track{background:transparent;}
+.welcome-box::-webkit-scrollbar-thumb{background:rgba(79,91,213,.3);border-radius:20px;}
+.welcome-box::-webkit-scrollbar-thumb:hover{background:rgba(79,91,213,.5);}
 .welcome-hero{background:var(--grad-navy);color:#fff;padding:34px 32px 28px;border-radius:22px 22px 0 0;
   position:relative;overflow:hidden;}
 .welcome-hero::before{content:'';position:absolute;width:260px;height:260px;border-radius:50%;
@@ -193,17 +202,23 @@ input,select,textarea{font-family:inherit;}
   border:1px solid rgba(255,255,255,.2);}
 .welcome-hero h2{position:relative;font-size:22px;margin-bottom:6px;}
 .welcome-hero p{position:relative;font-size:13.5px;opacity:.85;margin:0;line-height:1.5;}
-.welcome-body{padding:26px 32px 6px;}
+.welcome-body{padding:24px 32px 4px;min-height:236px;}
 .welcome-body-title{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;
   letter-spacing:.5px;margin-bottom:6px;}
-.welcome-feature{display:flex;gap:13px;padding:12px 0;border-bottom:1px solid var(--border);}
+.welcome-feature{display:flex;gap:13px;padding:12px 0;border-bottom:1px solid var(--border);
+  animation:fadeIn .25s ease;}
 .welcome-feature:last-child{border-bottom:none;}
 .welcome-feature-icon{width:38px;height:38px;border-radius:11px;background:var(--bg-soft);display:flex;
   align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
 .welcome-feature-text b{display:block;font-size:13.5px;color:var(--navy);margin-bottom:2px;}
 .welcome-feature-text span{font-size:12.5px;color:var(--muted);line-height:1.45;}
-.welcome-footer{padding:18px 32px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.welcome-dots{display:flex;justify-content:center;gap:6px;padding:10px 0 2px;}
+.welcome-dot{width:6px;height:6px;border-radius:20px;background:var(--border);transition:.2s;}
+.welcome-dot.active{width:20px;background:var(--indigo);}
+.welcome-footer{padding:16px 32px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 .welcome-footer label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.welcome-footer-nav{display:flex;gap:8px;}
+#welcome-prev:disabled{opacity:0;pointer-events:none;}
 
 /* ---------- CARDS / GRID ---------- */
 .card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);
@@ -668,6 +683,9 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
           <div class="main-topnav-name" id="gb-name-badge">-</div>
           <div class="main-topnav-role">Guru BK</div>
         </div>
+        <button class="main-topnav-help" onclick="showWelcomeHelp('GURUBK')" title="Panduan aplikasi">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"/><line x1="12" y1="16.5" x2="12" y2="16.5"/></svg>
+        </button>
         <div class="main-topnav-divider"></div>
         <button class="main-topnav-logout" onclick="logout()" title="Keluar">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -1973,6 +1991,9 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
           <div class="main-topnav-name" id="ks-name-badge">-</div>
           <div class="main-topnav-role">Kepala Sekolah</div>
         </div>
+        <button class="main-topnav-help" onclick="showWelcomeHelp('KEPSEK')" title="Panduan aplikasi">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"/><line x1="12" y1="16.5" x2="12" y2="16.5"/></svg>
+        </button>
         <div class="main-topnav-divider"></div>
         <button class="main-topnav-logout" onclick="logout()" title="Keluar">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -2043,6 +2064,9 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
           <div class="main-topnav-name" id="ad-name-badge">-</div>
           <div class="main-topnav-role">Administrator</div>
         </div>
+        <button class="main-topnav-help" onclick="showWelcomeHelp('ADMIN')" title="Panduan aplikasi">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"/><line x1="12" y1="16.5" x2="12" y2="16.5"/></svg>
+        </button>
         <div class="main-topnav-divider"></div>
         <button class="main-topnav-logout" onclick="logout()" title="Keluar">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -2159,9 +2183,13 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
       <div class="welcome-body-title">Fitur Utama</div>
       <div id="welcome-feature-list"></div>
     </div>
+    <div class="welcome-dots" id="welcome-dots"></div>
     <div class="welcome-footer">
       <label><input type="checkbox" id="welcome-dont-show"> Jangan tampilkan lagi</label>
-      <button class="btn btn-primary" onclick="closeWelcome()">Mulai Menggunakan</button>
+      <div class="welcome-footer-nav">
+        <button class="btn btn-outline btn-sm" id="welcome-prev" onclick="welcomePrev()">‹ Kembali</button>
+        <button class="btn btn-primary btn-sm" onclick="welcomeNext()"><span id="welcome-next-label">Lanjut</span></button>
+      </div>
     </div>
   </div>
 </div>
@@ -2627,27 +2655,64 @@ const WELCOME_FEATURES = {
   }
 };
 
-function maybeShowWelcome(role){
-  const key = 'bk_welcome_seen_' + role + '_' + (CURRENT.id || 'user');
-  try{ if(localStorage.getItem(key) === '1') return; }catch(e){}
+const WELCOME_CHUNK = 3; // jumlah fitur per halaman modal, biar gak scroll panjang
+let WELCOME_STATE = null; // {items, idx, key}
+
+function chunkArray(arr, size){
+  const out = [];
+  for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i, i+size));
+  return out;
+}
+
+function openWelcomeModal(role, force){
   const cfg = WELCOME_FEATURES[role];
   if(!cfg) return;
+  const key = 'bk_welcome_seen_' + role + '_' + (CURRENT.id || 'user');
+  if(!force){
+    try{ if(localStorage.getItem(key) === '1') return; }catch(e){}
+  }
   document.getElementById('welcome-title').textContent = cfg.title;
   document.getElementById('welcome-sub').textContent = cfg.sub;
+  document.getElementById('welcome-dont-show').checked = false;
+  WELCOME_STATE = { items: cfg.items, idx: 0, key: key };
+  renderWelcomeSlide();
+  document.getElementById('welcome-overlay').classList.add('active');
+}
+
+function maybeShowWelcome(role){ openWelcomeModal(role, false); }
+function showWelcomeHelp(role){ openWelcomeModal(role, true); }
+
+function renderWelcomeSlide(){
+  if(!WELCOME_STATE) return;
+  const slides = chunkArray(WELCOME_STATE.items, WELCOME_CHUNK);
+  const idx = WELCOME_STATE.idx;
   const list = document.getElementById('welcome-feature-list');
-  list.innerHTML = cfg.items.map(([icon,judul,desk])=>
+  list.innerHTML = slides[idx].map(([icon,judul,desk])=>
     '<div class="welcome-feature"><div class="welcome-feature-icon">' + icon + '</div>' +
     '<div class="welcome-feature-text"><b>' + judul + '</b><span>' + desk + '</span></div></div>'
   ).join('');
-  document.getElementById('welcome-dont-show').checked = false;
-  WELCOME_ACTIVE_KEY = key;
-  document.getElementById('welcome-overlay').classList.add('active');
+  const dots = document.getElementById('welcome-dots');
+  dots.innerHTML = slides.length > 1
+    ? slides.map((_,i)=>'<span class="welcome-dot' + (i===idx?' active':'') + '"></span>').join('')
+    : '';
+  document.getElementById('welcome-prev').disabled = (idx === 0);
+  document.getElementById('welcome-next-label').textContent = (idx === slides.length - 1) ? 'Mulai Menggunakan' : 'Lanjut';
 }
-let WELCOME_ACTIVE_KEY = null;
+
+function welcomeNext(){
+  if(!WELCOME_STATE) return;
+  const slides = chunkArray(WELCOME_STATE.items, WELCOME_CHUNK);
+  if(WELCOME_STATE.idx < slides.length - 1){ WELCOME_STATE.idx++; renderWelcomeSlide(); }
+  else { closeWelcome(); }
+}
+function welcomePrev(){
+  if(!WELCOME_STATE || WELCOME_STATE.idx === 0) return;
+  WELCOME_STATE.idx--; renderWelcomeSlide();
+}
 function closeWelcome(){
   const jgnTampilkan = document.getElementById('welcome-dont-show').checked;
-  if(jgnTampilkan && WELCOME_ACTIVE_KEY){
-    try{ localStorage.setItem(WELCOME_ACTIVE_KEY, '1'); }catch(e){}
+  if(jgnTampilkan && WELCOME_STATE && WELCOME_STATE.key){
+    try{ localStorage.setItem(WELCOME_STATE.key, '1'); }catch(e){}
   }
   document.getElementById('welcome-overlay').classList.remove('active');
 }
