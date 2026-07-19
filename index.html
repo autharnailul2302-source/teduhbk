@@ -273,16 +273,19 @@ tr:hover td{background:#fafbff;}
 .instrumen-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);}
 .instrumen-card.instrumen-akpd{border-left-color:var(--amber);}
 .instrumen-card.instrumen-sosio{border-left-color:var(--teal);}
+.instrumen-card.instrumen-profiling{border-left-color:var(--indigo);}
 .instrumen-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;
   font-size:24px;margin-bottom:12px;}
 .instrumen-icon.icon-amber{background:linear-gradient(135deg,#fef3e2,#fde3b8);}
 .instrumen-icon.icon-teal{background:linear-gradient(135deg,#e6f9f6,#c7f0e9);}
+.instrumen-icon.icon-indigo{background:linear-gradient(135deg,#eef0fd,#d9dcf7);}
 .card.instrumen-card h3{font-size:16px;margin-bottom:4px;color:var(--navy);font-weight:800;}
 .instrumen-card p{margin-bottom:14px;}
 .instrumen-arrow{position:absolute;top:20px;right:16px;font-size:18px;color:var(--border);transition:.2s;}
 .instrumen-card:hover .instrumen-arrow{color:var(--muted);transform:translateX(3px);}
 .instrumen-card.instrumen-akpd .instrumen-arrow{color:#fbd99a;}
 .instrumen-card.instrumen-sosio .instrumen-arrow{color:#9fe4da;}
+.instrumen-card.instrumen-profiling .instrumen-arrow{color:#c3c8f2;}
 .peta-table{border-collapse:collapse;font-size:12px;white-space:nowrap;}
 .peta-table th,.peta-table td{padding:6px 8px;border:1px solid var(--border);text-align:center;}
 .peta-table td:nth-child(2),.peta-table th:nth-child(2){text-align:left;min-width:160px;white-space:normal;}
@@ -486,7 +489,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
   <div id="siswa-hub" class="card" style="text-align:center;">
     <h2 id="hub-nama-siswa">Halo!</h2>
     <p class="muted small">Pilih instrumen yang ingin kamu isi.</p>
-    <div class="grid grid-2" style="margin-top:18px;text-align:left;">
+    <div class="grid grid-3" style="margin-top:18px;text-align:left;">
       <div class="card instrumen-card instrumen-akpd" onclick="openInstrumen('akpd')">
         <span class="instrumen-arrow">→</span>
         <div class="instrumen-icon icon-amber">🧭</div>
@@ -500,6 +503,13 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
         <h3>Sosiometri</h3>
         <p class="small muted">Persepsi sosial terhadap teman sekelas</p>
         <span class="badge" id="hub-badge-sosio">-</span>
+      </div>
+      <div class="card instrumen-card instrumen-profiling" onclick="openInstrumen('profiling')">
+        <span class="instrumen-arrow">→</span>
+        <div class="instrumen-icon icon-indigo">📝</div>
+        <h3>Profiling Diri</h3>
+        <p class="small muted">Lengkapi data diri, keluarga, dan minatmu</p>
+        <span class="badge" id="hub-badge-profiling">-</span>
       </div>
     </div>
     <button class="btn btn-outline-danger" style="margin-top:20px" onclick="logout()">🚪 Keluar</button>
@@ -628,6 +638,17 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
 
   </div>
   <!-- ================= /FLOW SOSIOMETRI ================= -->
+
+  <!-- ================= FLOW PROFILING DIRI (SISWA) ================= -->
+  <div id="profiling-siswa-flow" style="display:none;">
+    <div class="card" style="margin-bottom:14px;">
+      <h2 style="margin-bottom:2px;">Profiling & Data Diri</h2>
+      <p class="muted small">Isi data dirimu selengkap dan sejujur mungkin. Data ini akan membantu Guru BK memahami dan mendampingimu lebih baik. Kamu bisa mengubahnya kembali kapan saja jika ada yang perlu diperbarui.</p>
+    </div>
+    <div id="profiling-siswa-content"><p class="muted small">Memuat data...</p></div>
+    <button class="btn btn-outline btn-block" style="margin-top:8px" onclick="backToHub()">← Kembali ke Menu</button>
+  </div>
+  <!-- ================= /FLOW PROFILING DIRI (SISWA) ================= -->
 
 </div>
 
@@ -837,6 +858,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
 
     <!-- Datalist untuk auto-suggest Profiling (diisi dinamis lewat JS) -->
     <datalist id="dl-asal-sekolah"></datalist>
+    <datalist id="dl-tempat-lahir"></datalist>
     <datalist id="dl-agama"></datalist>
     <datalist id="dl-pekerjaan"></datalist>
     <datalist id="dl-pendidikan"></datalist>
@@ -2600,6 +2622,14 @@ function showToast(msg, type){
   t.className = 'toast show' + (type ? ' ' + type : '');
   setTimeout(()=> t.classList.remove('show'), 3000);
 }
+/** Ubah nilai tanggal (Date object / string) dari server jadi format yyyy-mm-dd untuk <input type="date">. */
+function toDateInputValue(v){
+  if(!v) return '';
+  const d = new Date(v);
+  if(isNaN(d.getTime())) return '';
+  const pad = n=> String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
 function switchView(id){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -2843,6 +2873,7 @@ function enterSiswaHub(data){
   switchView('view-siswa');
   document.getElementById('akpd-flow').style.display = 'none';
   document.getElementById('sosio-flow').style.display = 'none';
+  document.getElementById('profiling-siswa-flow').style.display = 'none';
   document.getElementById('siswa-hub').style.display = 'block';
   document.getElementById('hub-nama-siswa').textContent = 'Halo, ' + (data.nama || 'Siswa') + '!';
 
@@ -2854,11 +2885,21 @@ function enterSiswaHub(data){
   const badgeS = document.getElementById('hub-badge-sosio');
   badgeS.textContent = sosioDone ? 'Sudah Diisi' : 'Belum Diisi';
   badgeS.className = 'badge ' + (sosioDone ? 'badge-green' : 'badge-red');
+
+  const badgeP = document.getElementById('hub-badge-profiling');
+  badgeP.textContent = '...';
+  badgeP.className = 'badge';
+  google.script.run.withSuccessHandler(d=>{
+    const done = !!(d && d.profil && d.profil.TglDiisi);
+    badgeP.textContent = done ? 'Sudah Diisi' : 'Belum Diisi';
+    badgeP.className = 'badge ' + (done ? 'badge-green' : 'badge-red');
+  }).getProfilingSiswa(CURRENT.id);
 }
 
 function backToHub(){
   document.getElementById('akpd-flow').style.display = 'none';
   document.getElementById('sosio-flow').style.display = 'none';
+  document.getElementById('profiling-siswa-flow').style.display = 'none';
   document.getElementById('siswa-hub').style.display = 'block';
   // refresh status terkini
   google.script.run.withSuccessHandler(p=>{
@@ -2874,10 +2915,184 @@ function openInstrumen(jenis){
   if(jenis === 'akpd'){
     document.getElementById('akpd-flow').style.display = 'block';
     enterSiswaPortal(SISWA_DATA);
-  } else {
+  } else if(jenis === 'sosio'){
     document.getElementById('sosio-flow').style.display = 'block';
     enterSosioPortal(SISWA_DATA);
+  } else if(jenis === 'profiling'){
+    document.getElementById('profiling-siswa-flow').style.display = 'block';
+    enterProfilingSiswaPortal();
   }
+}
+
+/*************************************************************
+ * ===================== PORTAL SISWA — PROFILING DIRI =========
+ *************************************************************/
+let PROFILING_SISWA_MULTI_STATE = { GayaBelajar: {}, SifatKarakter: {} };
+let PROFILING_SISWA_SARAN_CACHE = null;
+
+function enterProfilingSiswaPortal(){
+  const wrap = document.getElementById('profiling-siswa-content');
+  wrap.innerHTML = '<p class="muted small">Memuat data...</p>';
+
+  const loadForm = () => {
+    google.script.run.withSuccessHandler(d=>{
+      if(!d){ wrap.innerHTML = '<p class="muted">Data siswa tidak ditemukan.</p>'; return; }
+      renderProfilingSiswaForm(d.siswa, d.profil, PROFILING_SISWA_SARAN_CACHE);
+    }).withFailureHandler(err=>{
+      wrap.innerHTML = '<p class="muted">Gagal memuat data.</p>';
+      showToast('Gagal memuat profil: '+err.message, 'err');
+    }).getProfilingSiswa(CURRENT.id);
+  };
+
+  if(PROFILING_SISWA_SARAN_CACHE){ loadForm(); }
+  else {
+    google.script.run.withSuccessHandler(saran=>{
+      PROFILING_SISWA_SARAN_CACHE = saran;
+      gbFillDatalist('dl-asal-sekolah', saran.asalSekolah);
+      gbFillDatalist('dl-tempat-lahir', saran.tempatLahir);
+      gbFillDatalist('dl-agama', saran.agama);
+      gbFillDatalist('dl-pekerjaan', saran.pekerjaan);
+      gbFillDatalist('dl-pendidikan', saran.pendidikan);
+      gbFillDatalist('dl-status-nikah', saran.statusPernikahanOrtu);
+      gbFillDatalist('dl-hubungan-ortu', saran.hubunganOrtu);
+      gbFillDatalist('dl-kondisi-kesehatan', saran.kondisiKesehatan);
+      gbFillDatalist('dl-disabilitas', saran.disabilitas);
+      gbFillDatalist('dl-bakat', saran.bakatMinat);
+      gbFillDatalist('dl-citacita', saran.citaCita);
+      gbFillDatalist('dl-mapel', saran.mapel);
+      gbFillDatalist('dl-hubungan-teman', saran.hubunganTeman);
+      loadForm();
+    }).withFailureHandler(err=>{
+      wrap.innerHTML = '<p class="muted">Gagal memuat data.</p>';
+      showToast('Gagal memuat saran: '+err.message, 'err');
+    }).getSaranProfiling();
+  }
+}
+
+function psfChipPickerHtml(field, options, selectedCsv){
+  const selected = (selectedCsv||'').split(',').map(s=>s.trim()).filter(Boolean);
+  PROFILING_SISWA_MULTI_STATE[field] = {};
+  selected.forEach(v=> PROFILING_SISWA_MULTI_STATE[field][v] = true);
+  const allOptions = Array.from(new Set(options.concat(selected)));
+  return '<div id="psf-chips-'+field+'" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">'+
+    allOptions.map(v=> psfChipHtml(field, v, !!PROFILING_SISWA_MULTI_STATE[field][v])).join('') +
+    '</div>'+
+    '<div style="display:flex;gap:6px;">'+
+      '<input type="text" id="psf-chip-new-'+field+'" placeholder="Tambah opsi baru..." style="flex:1;" onkeydown="if(event.key===\'Enter\'){event.preventDefault();psfAddChipOption(\''+field+'\');}">'+
+      '<button type="button" class="btn btn-sm btn-outline" onclick="psfAddChipOption(\''+field+'\')">+ Tambah</button>'+
+    '</div>';
+}
+
+function psfChipHtml(field, value, active){
+  const esc = value.replace(/'/g, "\\'");
+  return '<button type="button" class="btn btn-sm '+(active?'btn-primary':'btn-outline')+'" '+
+    'onclick="psfToggleChip(\''+field+'\',\''+esc+'\', this)">'+value+'</button>';
+}
+
+function psfToggleChip(field, value, btnEl){
+  PROFILING_SISWA_MULTI_STATE[field][value] = !PROFILING_SISWA_MULTI_STATE[field][value];
+  btnEl.className = 'btn btn-sm ' + (PROFILING_SISWA_MULTI_STATE[field][value] ? 'btn-primary' : 'btn-outline');
+}
+
+function psfAddChipOption(field){
+  const input = document.getElementById('psf-chip-new-'+field);
+  const val = input.value.trim();
+  if(!val) return;
+  PROFILING_SISWA_MULTI_STATE[field][val] = true;
+  const box = document.getElementById('psf-chips-'+field);
+  box.insertAdjacentHTML('beforeend', psfChipHtml(field, val, true));
+  input.value = '';
+}
+
+function psfGetChipValueCsv(field){
+  return Object.keys(PROFILING_SISWA_MULTI_STATE[field]).filter(k=> PROFILING_SISWA_MULTI_STATE[field][k]).join(', ');
+}
+
+function renderProfilingSiswaForm(siswa, profil, saran){
+  const v = (f)=> profil ? (profil[f]||'') : '';
+  const wrap = document.getElementById('profiling-siswa-content');
+  wrap.innerHTML =
+    '<div class="card">'+
+      '<h3 style="margin-top:0;">'+siswa.Nama+' <span class="small muted">('+siswa.NIS+' &middot; '+siswa.Kelas+')</span></h3>'+
+      (profil ? '<p class="small muted">Terakhir kamu perbarui: '+(profil.TglUpdate||'-')+'</p>' : '<p class="small muted">Belum pernah diisi. Yuk lengkapi datamu di bawah ini.</p>')+
+    '</div>'+
+
+    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">Identitas</h3>'+
+      '<div class="grid grid-2">'+
+        '<div class="field"><label>NISN</label><input id="psf-NISN" placeholder="-" value="'+v('NISN')+'"></div>'+
+        '<div class="field"><label>Asal Sekolah</label><input id="psf-AsalSekolah" list="dl-asal-sekolah" value="'+(v('AsalSekolah') || saran.asalSekolahDefault)+'"></div>'+
+        '<div class="field"><label>Nama Panggilan</label><input id="psf-NamaPanggilan" value="'+v('NamaPanggilan')+'"></div>'+
+        '<div class="field"><label>Tempat Lahir</label><input id="psf-TempatLahir" list="dl-tempat-lahir" placeholder="Lamongan" value="'+v('TempatLahir')+'"></div>'+
+        '<div class="field"><label>Tanggal Lahir</label><input id="psf-TanggalLahir" type="date" value="'+toDateInputValue(v('TanggalLahir'))+'"></div>'+
+        '<div class="field"><label>Agama / Kepercayaan</label><input id="psf-Agama" list="dl-agama" value="'+v('Agama')+'"></div>'+
+        '<div class="field"><label>Alamat Rumah Tinggal</label><input id="psf-AlamatRumah" value="'+v('AlamatRumah')+'"></div>'+
+        '<div class="field"><label>Nomor HP / WhatsApp Kamu</label><input id="psf-NoHPSiswa" type="tel" value="'+v('NoHPSiswa')+'"></div>'+
+      '</div>'+
+    '</div>'+
+
+    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">Kesehatan</h3>'+
+      '<div class="grid grid-2">'+
+        '<div class="field"><label>Riwayat Penyakit Berat / Kronis</label><input id="psf-RiwayatPenyakit" value="'+v('RiwayatPenyakit')+'"></div>'+
+        '<div class="field"><label>Disabilitas / Kebutuhan Khusus</label><input id="psf-Disabilitas" list="dl-disabilitas" value="'+v('Disabilitas')+'"></div>'+
+        '<div class="field"><label>Kondisi Kesehatan Umum</label><input id="psf-KondisiKesehatan" list="dl-kondisi-kesehatan" value="'+v('KondisiKesehatan')+'"></div>'+
+      '</div>'+
+    '</div>'+
+
+    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">Data Orang Tua / Wali</h3>'+
+      '<div class="grid grid-2">'+
+        '<div><h4 class="small muted">Ayah / Wali</h4>'+
+          '<div class="field"><label>Nama Lengkap</label><input id="psf-NamaAyah" value="'+v('NamaAyah')+'"></div>'+
+          '<div class="field"><label>Pekerjaan Utama</label><input id="psf-PekerjaanAyah" list="dl-pekerjaan" value="'+v('PekerjaanAyah')+'"></div>'+
+          '<div class="field"><label>Pendidikan Terakhir</label><input id="psf-PendidikanAyah" list="dl-pendidikan" value="'+v('PendidikanAyah')+'"></div>'+
+          '<div class="field"><label>Nomor HP / Kontak</label><input id="psf-KontakAyah" type="tel" value="'+v('KontakAyah')+'"></div>'+
+        '</div>'+
+        '<div><h4 class="small muted">Ibu / Wali</h4>'+
+          '<div class="field"><label>Nama Lengkap</label><input id="psf-NamaIbu" value="'+v('NamaIbu')+'"></div>'+
+          '<div class="field"><label>Pekerjaan Utama</label><input id="psf-PekerjaanIbu" list="dl-pekerjaan" value="'+v('PekerjaanIbu')+'"></div>'+
+          '<div class="field"><label>Pendidikan Terakhir</label><input id="psf-PendidikanIbu" list="dl-pendidikan" value="'+v('PendidikanIbu')+'"></div>'+
+          '<div class="field"><label>Nomor HP / Kontak</label><input id="psf-KontakIbu" type="tel" value="'+v('KontakIbu')+'"></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="grid grid-2">'+
+        '<div class="field"><label>Status Pernikahan Orang Tua</label><input id="psf-StatusPernikahanOrtu" list="dl-status-nikah" value="'+v('StatusPernikahanOrtu')+'"></div>'+
+        '<div class="field"><label>Hubungan Kamu dengan Orang Tua</label><input id="psf-HubunganSiswaOrtu" list="dl-hubungan-ortu" value="'+v('HubunganSiswaOrtu')+'"></div>'+
+      '</div>'+
+    '</div>'+
+
+    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">Psikologis & Minat</h3>'+
+      '<div class="field"><label>Gaya Belajar Dominan</label>'+psfChipPickerHtml('GayaBelajar', saran.gayaBelajarOptions, v('GayaBelajar'))+'</div>'+
+      '<div class="field" style="margin-top:14px;"><label>Sifat / Karakter Menonjol</label>'+psfChipPickerHtml('SifatKarakter', saran.sifatKarakterOptions, v('SifatKarakter'))+'</div>'+
+      '<div class="grid grid-2" style="margin-top:14px;">'+
+        '<div class="field"><label>Bakat / Minat Khusus</label><input id="psf-BakatMinat" list="dl-bakat" value="'+v('BakatMinat')+'"></div>'+
+        '<div class="field"><label>Cita-cita Karier / Akademik</label><input id="psf-CitaCita" list="dl-citacita" value="'+v('CitaCita')+'"></div>'+
+      '</div>'+
+    '</div>'+
+
+    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">Akademik & Sosial</h3>'+
+      '<div class="grid grid-2">'+
+        '<div class="field"><label>Prestasi yang Pernah Diraih</label><input id="psf-Prestasi" value="'+v('Prestasi')+'"></div>'+
+        '<div class="field"><label>Hubungan dengan Teman Sebaya</label><input id="psf-HubunganTemanSebaya" list="dl-hubungan-teman" value="'+v('HubunganTemanSebaya')+'"></div>'+
+        '<div class="field"><label>Mata Pelajaran yang Disukai</label><input id="psf-MapelDisukai" list="dl-mapel" value="'+v('MapelDisukai')+'"></div>'+
+        '<div class="field"><label>Mata Pelajaran Paling Sulit</label><input id="psf-MapelSulit" list="dl-mapel" value="'+v('MapelSulit')+'"></div>'+
+      '</div>'+
+    '</div>'+
+
+    '<div style="margin:16px 0;"><button class="btn btn-primary btn-block" onclick="siswaSubmitProfiling()">💾 Simpan Data Diriku</button></div>';
+}
+
+function siswaSubmitProfiling(){
+  const fields = ['NamaPanggilan','NISN','AsalSekolah','TempatLahir','TanggalLahir','Agama','AlamatRumah','NoHPSiswa',
+    'RiwayatPenyakit','Disabilitas','KondisiKesehatan','NamaAyah','PekerjaanAyah','PendidikanAyah','KontakAyah',
+    'NamaIbu','PekerjaanIbu','PendidikanIbu','KontakIbu','StatusPernikahanOrtu','HubunganSiswaOrtu',
+    'BakatMinat','CitaCita','Prestasi','MapelDisukai','MapelSulit','HubunganTemanSebaya'];
+  const record = { SiswaID: CURRENT.id };
+  fields.forEach(f=>{ const el = document.getElementById('psf-'+f); if(el) record[f] = el.value.trim(); });
+  record.GayaBelajar = psfGetChipValueCsv('GayaBelajar');
+  record.SifatKarakter = psfGetChipValueCsv('SifatKarakter');
+  google.script.run.withSuccessHandler(()=>{
+    showToast('Data dirimu tersimpan. Terima kasih!', 'ok');
+    enterProfilingSiswaPortal();
+  }).withFailureHandler(err=> showToast('Gagal: '+err.message, 'err')).simpanProfiling(record);
 }
 
 /*************************************************************
@@ -3662,6 +3877,7 @@ function gbLoadProfilingForm(){
     google.script.run.withSuccessHandler(saran=>{
       PROFILING_SARAN_CACHE = saran;
       gbFillDatalist('dl-asal-sekolah', saran.asalSekolah);
+      gbFillDatalist('dl-tempat-lahir', saran.tempatLahir);
       gbFillDatalist('dl-agama', saran.agama);
       gbFillDatalist('dl-pekerjaan', saran.pekerjaan);
       gbFillDatalist('dl-pendidikan', saran.pendidikan);
@@ -3744,10 +3960,11 @@ function gbRenderProfilingForm(siswa, profil, saran){
         '<div class="field"><label>NISN</label><input id="pf-NISN" placeholder="-" value="'+v('NISN')+'"></div>'+
         '<div class="field"><label>Asal Sekolah</label><input id="pf-AsalSekolah" list="dl-asal-sekolah" value="'+(v('AsalSekolah') || saran.asalSekolahDefault)+'"></div>'+
         '<div class="field"><label>Nama Panggilan</label><input id="pf-NamaPanggilan" value="'+v('NamaPanggilan')+'"></div>'+
-        '<div class="field"><label>Tempat, Tanggal Lahir</label><input id="pf-TempatTanggalLahir" placeholder="Lamongan, 17 Agustus 2012" value="'+v('TempatTanggalLahir')+'"></div>'+
+        '<div class="field"><label>Tempat Lahir</label><input id="pf-TempatLahir" list="dl-tempat-lahir" placeholder="Lamongan" value="'+v('TempatLahir')+'"></div>'+
+        '<div class="field"><label>Tanggal Lahir</label><input id="pf-TanggalLahir" type="date" value="'+toDateInputValue(v('TanggalLahir'))+'"></div>'+
         '<div class="field"><label>Agama / Kepercayaan</label><input id="pf-Agama" list="dl-agama" value="'+v('Agama')+'"></div>'+
         '<div class="field"><label>Alamat Rumah Tinggal</label><input id="pf-AlamatRumah" value="'+v('AlamatRumah')+'"></div>'+
-        '<div class="field"><label>Nomor HP / WhatsApp Siswa</label><input id="pf-NoHPSiswa" value="'+v('NoHPSiswa')+'"></div>'+
+        '<div class="field"><label>Nomor HP / WhatsApp Siswa</label><input id="pf-NoHPSiswa" type="tel" value="'+v('NoHPSiswa')+'"></div>'+
       '</div>'+
     '</div>'+
 
@@ -3765,13 +3982,13 @@ function gbRenderProfilingForm(siswa, profil, saran){
           '<div class="field"><label>Nama Lengkap</label><input id="pf-NamaAyah" value="'+v('NamaAyah')+'"></div>'+
           '<div class="field"><label>Pekerjaan Utama</label><input id="pf-PekerjaanAyah" list="dl-pekerjaan" value="'+v('PekerjaanAyah')+'"></div>'+
           '<div class="field"><label>Pendidikan Terakhir</label><input id="pf-PendidikanAyah" list="dl-pendidikan" value="'+v('PendidikanAyah')+'"></div>'+
-          '<div class="field"><label>Nomor HP / Kontak</label><input id="pf-KontakAyah" value="'+v('KontakAyah')+'"></div>'+
+          '<div class="field"><label>Nomor HP / Kontak</label><input id="pf-KontakAyah" type="tel" value="'+v('KontakAyah')+'"></div>'+
         '</div>'+
         '<div><h4 class="small muted">Ibu / Wali</h4>'+
           '<div class="field"><label>Nama Lengkap</label><input id="pf-NamaIbu" value="'+v('NamaIbu')+'"></div>'+
           '<div class="field"><label>Pekerjaan Utama</label><input id="pf-PekerjaanIbu" list="dl-pekerjaan" value="'+v('PekerjaanIbu')+'"></div>'+
           '<div class="field"><label>Pendidikan Terakhir</label><input id="pf-PendidikanIbu" list="dl-pendidikan" value="'+v('PendidikanIbu')+'"></div>'+
-          '<div class="field"><label>Nomor HP / Kontak</label><input id="pf-KontakIbu" value="'+v('KontakIbu')+'"></div>'+
+          '<div class="field"><label>Nomor HP / Kontak</label><input id="pf-KontakIbu" type="tel" value="'+v('KontakIbu')+'"></div>'+
         '</div>'+
       '</div>'+
       '<div class="grid grid-2">'+
@@ -3803,7 +4020,7 @@ function gbRenderProfilingForm(siswa, profil, saran){
 
 function gbSubmitProfiling(){
   if(!PROFILING_CURRENT_SISWA_ID){ showToast('Pilih siswa dulu.', 'err'); return; }
-  const fields = ['NamaPanggilan','NISN','AsalSekolah','TempatTanggalLahir','Agama','AlamatRumah','NoHPSiswa',
+  const fields = ['NamaPanggilan','NISN','AsalSekolah','TempatLahir','TanggalLahir','Agama','AlamatRumah','NoHPSiswa',
     'RiwayatPenyakit','Disabilitas','KondisiKesehatan','NamaAyah','PekerjaanAyah','PendidikanAyah','KontakAyah',
     'NamaIbu','PekerjaanIbu','PendidikanIbu','KontakIbu','StatusPernikahanOrtu','HubunganSiswaOrtu',
     'BakatMinat','CitaCita','Prestasi','MapelDisukai','MapelSulit','HubunganTemanSebaya'];
