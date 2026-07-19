@@ -3023,10 +3023,19 @@ function renderProfilingSiswaForm(siswa, profil, saran){
   wrap.innerHTML =
     '<div class="card">'+
       '<h3 style="margin-top:0;">'+siswa.Nama+' <span class="small muted">('+siswa.NIS+' &middot; '+siswa.Kelas+')</span></h3>'+
-      (profil ? '<p class="small muted">Terakhir kamu perbarui: '+(profil.TglUpdate||'-')+'</p>' : '<p class="small muted">Belum pernah diisi. Yuk lengkapi datamu di bawah ini.</p>')+
+      (profil ? '<p class="small muted">Terakhir kamu perbarui: '+(profil.TglUpdate||'-')+'</p>' : '<p class="small muted">Belum pernah diisi. Yuk lengkapi datamu di bawah ini, sedikit demi sedikit per halaman.</p>')+
     '</div>'+
 
-    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">Identitas</h3>'+
+    '<div class="stepper" id="psf-stepper" style="margin-top:16px;">'+
+      '<div class="step-dot" data-step="1">1</div>'+
+      '<div class="step-dot" data-step="2">2</div>'+
+      '<div class="step-dot" data-step="3">3</div>'+
+      '<div class="step-dot" data-step="4">4</div>'+
+      '<div class="step-dot" data-step="5">5</div>'+
+    '</div>'+
+
+    '<div id="psf-step-1" class="psf-step-panel">'+
+    '<div class="card"><h3 style="margin-top:0;">1. Identitas</h3>'+
       '<div class="grid grid-2">'+
         '<div class="field"><label>NISN</label><input id="psf-NISN" placeholder="-" value="'+v('NISN')+'"></div>'+
         '<div class="field"><label>Asal Sekolah</label><input id="psf-AsalSekolah" list="dl-asal-sekolah" value="'+(v('AsalSekolah') || saran.asalSekolahDefault)+'"></div>'+
@@ -3038,16 +3047,25 @@ function renderProfilingSiswaForm(siswa, profil, saran){
         '<div class="field"><label>Nomor HP / WhatsApp Kamu</label><input id="psf-NoHPSiswa" type="tel" value="'+v('NoHPSiswa')+'"></div>'+
       '</div>'+
     '</div>'+
+    '<div style="margin:16px 0;display:flex;justify-content:flex-end;"><button class="btn btn-primary" onclick="psfGoStep(2)">Lanjut ›</button></div>'+
+    '</div>'+
 
-    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">Kesehatan</h3>'+
+    '<div id="psf-step-2" class="psf-step-panel" style="display:none;">'+
+    '<div class="card"><h3 style="margin-top:0;">2. Kesehatan</h3>'+
       '<div class="grid grid-2">'+
         '<div class="field"><label>Riwayat Penyakit Berat / Kronis</label><input id="psf-RiwayatPenyakit" value="'+v('RiwayatPenyakit')+'"></div>'+
         '<div class="field"><label>Disabilitas / Kebutuhan Khusus</label><input id="psf-Disabilitas" list="dl-disabilitas" value="'+v('Disabilitas')+'"></div>'+
         '<div class="field"><label>Kondisi Kesehatan Umum</label><input id="psf-KondisiKesehatan" list="dl-kondisi-kesehatan" value="'+v('KondisiKesehatan')+'"></div>'+
       '</div>'+
     '</div>'+
+    '<div style="margin:16px 0;display:flex;justify-content:space-between;">'+
+      '<button class="btn btn-outline" onclick="psfGoStep(1)">‹ Sebelumnya</button>'+
+      '<button class="btn btn-primary" onclick="psfGoStep(3)">Lanjut ›</button>'+
+    '</div>'+
+    '</div>'+
 
-    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">Data Orang Tua / Wali</h3>'+
+    '<div id="psf-step-3" class="psf-step-panel" style="display:none;">'+
+    '<div class="card"><h3 style="margin-top:0;">3. Data Orang Tua / Wali</h3>'+
       '<div class="grid grid-2">'+
         '<div><h4 class="small muted">Ayah / Wali</h4>'+
           '<div class="field"><label>Nama Lengkap</label><input id="psf-NamaAyah" value="'+v('NamaAyah')+'"></div>'+
@@ -3067,8 +3085,14 @@ function renderProfilingSiswaForm(siswa, profil, saran){
         '<div class="field"><label>Hubungan Kamu dengan Orang Tua</label><input id="psf-HubunganSiswaOrtu" list="dl-hubungan-ortu" value="'+v('HubunganSiswaOrtu')+'"></div>'+
       '</div>'+
     '</div>'+
+    '<div style="margin:16px 0;display:flex;justify-content:space-between;">'+
+      '<button class="btn btn-outline" onclick="psfGoStep(2)">‹ Sebelumnya</button>'+
+      '<button class="btn btn-primary" onclick="psfGoStep(4)">Lanjut ›</button>'+
+    '</div>'+
+    '</div>'+
 
-    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">Psikologis & Minat</h3>'+
+    '<div id="psf-step-4" class="psf-step-panel" style="display:none;">'+
+    '<div class="card"><h3 style="margin-top:0;">4. Psikologis & Minat</h3>'+
       '<div class="field"><label>Gaya Belajar Dominan</label>'+psfChipPickerHtml('GayaBelajar', saran.gayaBelajarOptions, v('GayaBelajar'))+'</div>'+
       '<div class="field" style="margin-top:14px;"><label>Sifat / Karakter Menonjol</label>'+psfChipPickerHtml('SifatKarakter', saran.sifatKarakterOptions, v('SifatKarakter'))+'</div>'+
       '<div class="grid grid-2" style="margin-top:14px;">'+
@@ -3076,8 +3100,14 @@ function renderProfilingSiswaForm(siswa, profil, saran){
         '<div class="field"><label>Cita-cita Karier / Akademik</label><input id="psf-CitaCita" list="dl-citacita" value="'+v('CitaCita')+'"></div>'+
       '</div>'+
     '</div>'+
+    '<div style="margin:16px 0;display:flex;justify-content:space-between;">'+
+      '<button class="btn btn-outline" onclick="psfGoStep(3)">‹ Sebelumnya</button>'+
+      '<button class="btn btn-primary" onclick="psfGoStep(5)">Lanjut ›</button>'+
+    '</div>'+
+    '</div>'+
 
-    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">Akademik & Sosial</h3>'+
+    '<div id="psf-step-5" class="psf-step-panel" style="display:none;">'+
+    '<div class="card"><h3 style="margin-top:0;">5. Akademik & Sosial</h3>'+
       '<div class="grid grid-2">'+
         '<div class="field"><label>Prestasi yang Pernah Diraih</label><input id="psf-Prestasi" value="'+v('Prestasi')+'"></div>'+
         '<div class="field"><label>Hubungan dengan Teman Sebaya</label><input id="psf-HubunganTemanSebaya" list="dl-hubungan-teman" value="'+v('HubunganTemanSebaya')+'"></div>'+
@@ -3085,8 +3115,28 @@ function renderProfilingSiswaForm(siswa, profil, saran){
         '<div class="field"><label>Mata Pelajaran Paling Sulit</label><input id="psf-MapelSulit" list="dl-mapel" value="'+v('MapelSulit')+'"></div>'+
       '</div>'+
     '</div>'+
+    '<div style="margin:16px 0;display:flex;justify-content:space-between;">'+
+      '<button class="btn btn-outline" onclick="psfGoStep(4)">‹ Sebelumnya</button>'+
+      '<button class="btn btn-primary btn-block" style="max-width:260px;" onclick="siswaSubmitProfiling()">💾 Simpan Data Diriku</button>'+
+    '</div>'+
+    '</div>';
 
-    '<div style="margin:16px 0;"><button class="btn btn-primary btn-block" onclick="siswaSubmitProfiling()">💾 Simpan Data Diriku</button></div>';
+  psfGoStep(1);
+}
+
+let PSF_STEP = 1;
+function psfGoStep(n){
+  PSF_STEP = n;
+  document.querySelectorAll('.psf-step-panel').forEach(p=>p.style.display='none');
+  const panel = document.getElementById('psf-step-'+n);
+  if(panel) panel.style.display='block';
+  document.querySelectorAll('#psf-stepper .step-dot').forEach(d=>{
+    const s = parseInt(d.dataset.step);
+    d.classList.toggle('active', s===n);
+    d.classList.toggle('done', s<n);
+  });
+  const wrap = document.getElementById('profiling-siswa-content');
+  if(wrap) wrap.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function siswaSubmitProfiling(){
