@@ -3902,6 +3902,12 @@ function gbFillDatalist(id, values){
   if(el) el.innerHTML = (values||[]).map(v=> '<option value="'+v.replace(/"/g,'&quot;')+'">').join('');
 }
 
+function gbSelectHtml(id, options, selectedValue){
+  return '<select id="'+id+'"><option value="">— Pilih —</option>' +
+    options.map(o=> '<option value="'+o.replace(/"/g,'&quot;')+'"'+(o===selectedValue?' selected':'')+'>'+o+'</option>').join('') +
+    '</select>';
+}
+
 function gbChipPickerHtml(field, options, selectedCsv){
   const selected = (selectedCsv||'').split(',').map(s=>s.trim()).filter(Boolean);
   PROFILING_MULTI_STATE[field] = {};
@@ -4015,6 +4021,41 @@ function gbRenderProfilingForm(siswa, profil, saran){
       '</div>'+
     '</div>'+
 
+    '<div class="card" style="margin-top:12px;border-left:3px solid var(--indigo);">'+
+      '<h3 style="margin-top:0;">II. Profiling Kepribadian <span class="small muted">(Aspek Psikologis &amp; Emosional — diisi Guru BK)</span></h3>'+
+      '<div class="grid grid-2">'+
+        '<div class="field"><label>Tipe Kepribadian Umum</label>'+gbSelectHtml('pf-TipeKepribadian', saran.tipeKepribadianOptions, v('TipeKepribadian'))+'</div>'+
+        '<div class="field"><label>Stabilitas Emosi Siswa</label>'+gbSelectHtml('pf-StabilitasEmosi', saran.stabilitasEmosiOptions, v('StabilitasEmosi'))+'</div>'+
+        '<div class="field"><label>Sikap &amp; Penyesuaian Sosial</label>'+gbSelectHtml('pf-PenyesuaianSosial', saran.penyesuaianSosialOptions, v('PenyesuaianSosial'))+'</div>'+
+        '<div class="field"><label>Tingkat Kepercayaan Diri</label>'+gbSelectHtml('pf-TingkatKepercayaanDiri', saran.kepercayaanDiriOptions, v('TingkatKepercayaanDiri'))+'</div>'+
+      '</div>'+
+      '<h4 class="small muted" style="margin-top:14px;">Deskripsi Karakter Dominan</h4>'+
+      '<div class="grid grid-2">'+
+        '<div class="field"><label>Kekuatan Karakter 1</label><input id="pf-KekuatanKarakter1" value="'+v('KekuatanKarakter1')+'"></div>'+
+        '<div class="field"><label>Kekuatan Karakter 2</label><input id="pf-KekuatanKarakter2" value="'+v('KekuatanKarakter2')+'"></div>'+
+        '<div class="field"><label>Hal yang Perlu Dikembangkan 1</label><input id="pf-PerluDikembangkan1" value="'+v('PerluDikembangkan1')+'"></div>'+
+        '<div class="field"><label>Hal yang Perlu Dikembangkan 2</label><input id="pf-PerluDikembangkan2" value="'+v('PerluDikembangkan2')+'"></div>'+
+      '</div>'+
+    '</div>'+
+
+    '<div class="card" style="margin-top:12px;border-left:3px solid var(--indigo);">'+
+      '<h3 style="margin-top:0;">III. Komponen Layanan BK <span class="small muted">(diisi Guru BK)</span></h3>'+
+      '<div class="field"><label>1. Layanan Pribadi — Masalah Pribadi yang Menonjol</label>'+gbChipPickerHtml('MasalahPribadi', saran.masalahPribadiOptions, v('MasalahPribadi'))+'</div>'+
+      '<div class="field"><label>Lainnya (Layanan Pribadi)</label><input id="pf-MasalahPribadiLainnya" value="'+v('MasalahPribadiLainnya')+'"></div>'+
+      '<div class="field" style="margin-top:14px;"><label>2. Layanan Sosial — Potensi Masalah Hubungan Sosial</label>'+gbChipPickerHtml('MasalahSosial', saran.masalahSosialOptions, v('MasalahSosial'))+'</div>'+
+      '<div class="field"><label>Lainnya (Layanan Sosial)</label><input id="pf-MasalahSosialLainnya" value="'+v('MasalahSosialLainnya')+'"></div>'+
+      '<div class="field" style="margin-top:14px;"><label>3. Layanan Belajar — Hambatan Proses Belajar</label>'+gbChipPickerHtml('HambatanBelajar', saran.hambatanBelajarOptions, v('HambatanBelajar'))+'</div>'+
+      '<div class="grid grid-2" style="margin-top:14px;">'+
+        '<div class="field"><label>4. Layanan Karier — Rencana Kelanjutan Studi</label>'+gbSelectHtml('pf-RencanaKelanjutanStudi', saran.rencanaStudiOptions, v('RencanaKelanjutanStudi'))+'</div>'+
+        '<div class="field"><label>Minat Ekstrakurikuler</label><input id="pf-MinatEkstrakurikuler" value="'+v('MinatEkstrakurikuler')+'"></div>'+
+      '</div>'+
+    '</div>'+
+
+    '<div class="card" style="margin-top:12px;border-left:3px solid var(--indigo);">'+
+      '<h3 style="margin-top:0;">VI. Catatan Kasus / Permasalahan <span class="small muted">(diisi Guru BK)</span></h3>'+
+      '<div class="field"><textarea id="pf-CatatanKasus" rows="4" placeholder="Catatan kasus/permasalahan siswa berdasarkan observasi dan wawancara...">'+v('CatatanKasus')+'</textarea></div>'+
+    '</div>'+
+
     '<div style="margin:16px 0;"><button class="btn btn-primary" onclick="gbSubmitProfiling()">💾 Simpan Profil</button></div>';
 }
 
@@ -4023,11 +4064,17 @@ function gbSubmitProfiling(){
   const fields = ['NamaPanggilan','NISN','AsalSekolah','TempatLahir','TanggalLahir','Agama','AlamatRumah','NoHPSiswa',
     'RiwayatPenyakit','Disabilitas','KondisiKesehatan','NamaAyah','PekerjaanAyah','PendidikanAyah','KontakAyah',
     'NamaIbu','PekerjaanIbu','PendidikanIbu','KontakIbu','StatusPernikahanOrtu','HubunganSiswaOrtu',
-    'BakatMinat','CitaCita','Prestasi','MapelDisukai','MapelSulit','HubunganTemanSebaya'];
+    'BakatMinat','CitaCita','Prestasi','MapelDisukai','MapelSulit','HubunganTemanSebaya',
+    'TipeKepribadian','StabilitasEmosi','PenyesuaianSosial','TingkatKepercayaanDiri',
+    'KekuatanKarakter1','KekuatanKarakter2','PerluDikembangkan1','PerluDikembangkan2',
+    'MasalahPribadiLainnya','MasalahSosialLainnya','RencanaKelanjutanStudi','MinatEkstrakurikuler','CatatanKasus'];
   const record = { SiswaID: PROFILING_CURRENT_SISWA_ID };
   fields.forEach(f=>{ const el = document.getElementById('pf-'+f); if(el) record[f] = el.value.trim(); });
   record.GayaBelajar = gbGetChipValueCsv('GayaBelajar');
   record.SifatKarakter = gbGetChipValueCsv('SifatKarakter');
+  record.MasalahPribadi = gbGetChipValueCsv('MasalahPribadi');
+  record.MasalahSosial = gbGetChipValueCsv('MasalahSosial');
+  record.HambatanBelajar = gbGetChipValueCsv('HambatanBelajar');
   google.script.run.withSuccessHandler(()=>{
     showToast('Profil siswa tersimpan.', 'ok');
     PROFILING_SARAN_CACHE = null; // refresh saran biar opsi/nilai baru ikut ke-suggest lain kali
