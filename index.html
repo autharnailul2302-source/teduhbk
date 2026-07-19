@@ -226,10 +226,11 @@ input,select,textarea{font-family:inherit;}
 .card:hover{box-shadow:var(--shadow-md);}
 .grid{display:grid;gap:16px;}
 .grid-4{grid-template-columns:repeat(4,1fr);}
+.grid-5{grid-template-columns:repeat(5,1fr);}
 .grid-3{grid-template-columns:repeat(3,1fr);}
 .grid-2{grid-template-columns:repeat(2,1fr);}
-@media(max-width:900px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr 1fr;}}
-@media(max-width:600px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr;} .main{max-width:100vw;padding:18px;}
+@media(max-width:900px){.grid-4,.grid-3,.grid-2,.grid-5{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.grid-4,.grid-3,.grid-2,.grid-5{grid-template-columns:1fr;} .main{max-width:100vw;padding:18px;}
   .app-shell{flex-direction:column;}
   .sidebar{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;position:static;height:auto;overflow:visible;}
   .sidebar-user{width:100%;}
@@ -729,7 +730,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
         </div>
       </div>
 
-      <div class="grid grid-4" style="margin-bottom:18px;">
+      <div class="grid grid-5" style="margin-bottom:18px;">
         <div class="card stat-card">
           <div class="stat-icon" style="background:#e8edf5;color:var(--navy);">👥</div>
           <div class="num" id="stat-jumlah">-</div><div class="label">Jumlah Siswa</div>
@@ -741,6 +742,10 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
         <div class="card stat-card">
           <div class="stat-icon" style="background:#fdecec;color:var(--red);">⏳</div>
           <div class="num" id="stat-belum">-</div><div class="label">Belum Mengisi</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:#eef0fd;color:var(--indigo);">📝</div>
+          <div class="num" id="stat-profiling-sudah">-</div><div class="label">Profiling Sudah Diisi</div>
         </div>
         <div class="card stat-card">
           <div class="stat-icon" style="background:#fef3e2;color:#b8720b;">📈</div>
@@ -3451,6 +3456,7 @@ function gbLoadDashboard(){
     document.getElementById('stat-jumlah').textContent = d.jumlahSiswa;
     document.getElementById('stat-sudah').textContent = d.sudahIsi;
     document.getElementById('stat-belum').textContent = d.belumIsi;
+    document.getElementById('stat-profiling-sudah').textContent = d.profilingSudah + ' / ' + d.jumlahSiswa;
     document.getElementById('stat-tertinggi').textContent = d.kebutuhanTertinggi.length ? ASPEK_LABEL[d.kebutuhanTertinggi[0].aspek] : '-';
     document.getElementById('toggle-angket').checked = d.settings.angketDibuka;
     if(document.getElementById('toggle-sosio')) document.getElementById('toggle-sosio').checked = d.settings.sosioDibuka;
