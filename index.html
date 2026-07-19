@@ -836,6 +836,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     </div>
 
     <!-- Datalist untuk auto-suggest Profiling (diisi dinamis lewat JS) -->
+    <datalist id="dl-asal-sekolah"></datalist>
     <datalist id="dl-agama"></datalist>
     <datalist id="dl-pekerjaan"></datalist>
     <datalist id="dl-pendidikan"></datalist>
@@ -3660,6 +3661,7 @@ function gbLoadProfilingForm(){
   else {
     google.script.run.withSuccessHandler(saran=>{
       PROFILING_SARAN_CACHE = saran;
+      gbFillDatalist('dl-asal-sekolah', saran.asalSekolah);
       gbFillDatalist('dl-agama', saran.agama);
       gbFillDatalist('dl-pekerjaan', saran.pekerjaan);
       gbFillDatalist('dl-pendidikan', saran.pendidikan);
@@ -3738,8 +3740,10 @@ function gbRenderProfilingForm(siswa, profil, saran){
 
     '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">Identitas</h3>'+
       '<div class="grid grid-2">'+
+        '<div class="field"><label>Nomor Induk Siswa (NIS)</label><input value="'+(siswa.NIS||'-')+'" disabled style="background:var(--bg-soft);color:var(--muted);"></div>'+
+        '<div class="field"><label>NISN</label><input id="pf-NISN" placeholder="-" value="'+v('NISN')+'"></div>'+
+        '<div class="field"><label>Asal Sekolah</label><input id="pf-AsalSekolah" list="dl-asal-sekolah" value="'+(v('AsalSekolah') || saran.asalSekolahDefault)+'"></div>'+
         '<div class="field"><label>Nama Panggilan</label><input id="pf-NamaPanggilan" value="'+v('NamaPanggilan')+'"></div>'+
-        '<div class="field"><label>Nomor Induk Siswa / Asal Sekolah</label><input id="pf-AsalSekolah" value="'+v('AsalSekolah')+'"></div>'+
         '<div class="field"><label>Tempat, Tanggal Lahir</label><input id="pf-TempatTanggalLahir" placeholder="Lamongan, 17 Agustus 2012" value="'+v('TempatTanggalLahir')+'"></div>'+
         '<div class="field"><label>Agama / Kepercayaan</label><input id="pf-Agama" list="dl-agama" value="'+v('Agama')+'"></div>'+
         '<div class="field"><label>Alamat Rumah Tinggal</label><input id="pf-AlamatRumah" value="'+v('AlamatRumah')+'"></div>'+
@@ -3799,7 +3803,7 @@ function gbRenderProfilingForm(siswa, profil, saran){
 
 function gbSubmitProfiling(){
   if(!PROFILING_CURRENT_SISWA_ID){ showToast('Pilih siswa dulu.', 'err'); return; }
-  const fields = ['NamaPanggilan','AsalSekolah','TempatTanggalLahir','Agama','AlamatRumah','NoHPSiswa',
+  const fields = ['NamaPanggilan','NISN','AsalSekolah','TempatTanggalLahir','Agama','AlamatRumah','NoHPSiswa',
     'RiwayatPenyakit','Disabilitas','KondisiKesehatan','NamaAyah','PekerjaanAyah','PendidikanAyah','KontakAyah',
     'NamaIbu','PekerjaanIbu','PendidikanIbu','KontakIbu','StatusPernikahanOrtu','HubunganSiswaOrtu',
     'BakatMinat','CitaCita','Prestasi','MapelDisukai','MapelSulit','HubunganTemanSebaya'];
