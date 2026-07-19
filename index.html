@@ -3556,7 +3556,7 @@ function gbLoadRiwayatSiswaSelect(preselectId){
       list.map(s=> '<option value="'+s.ID+'">'+s.Nama+' ('+s.Kelas+(s.StatusLulus==='LULUS'?' — Alumni':'')+')</option>').join('');
     if(preselectId){ sel.value = preselectId; gbLoadRiwayatSiswa(); }
     else document.getElementById('riwayat-content').innerHTML = '<p class="muted small">Pilih siswa untuk melihat riwayat BK-nya.</p>';
-  }).getDaftarSiswa(kelas, status);
+  }).withFailureHandler(err=> showToast('Gagal memuat daftar siswa: '+err.message, 'err')).getDaftarSiswa(kelas, status);
 }
 
 function gbBukaRiwayatSiswa(id){
@@ -3607,6 +3607,9 @@ function gbLoadRiwayatSiswa(){
       '</div>'+
       '<h3 style="margin-top:16px;">Timeline Layanan</h3>'+
       timelineHtml;
+  }).withFailureHandler(err=>{
+    wrap.innerHTML = '<p class="muted">Gagal memuat data.</p>';
+    showToast('Gagal memuat riwayat: '+err.message, 'err');
   }).getRiwayatSiswa(id);
 }
 
@@ -3627,7 +3630,7 @@ function gbLoadProfilingSiswaSelect(preselectId){
       list.map(s=> '<option value="'+s.ID+'">'+s.Nama+' ('+s.Kelas+(s.StatusLulus==='LULUS'?' — Alumni':'')+')</option>').join('');
     if(preselectId){ sel.value = preselectId; gbLoadProfilingForm(); }
     else document.getElementById('profiling-content').innerHTML = '<p class="muted small">Pilih siswa dulu untuk mulai isi/lihat profilnya.</p>';
-  }).getDaftarSiswa(kelas, status);
+  }).withFailureHandler(err=> showToast('Gagal memuat daftar siswa: '+err.message, 'err')).getDaftarSiswa(kelas, status);
 }
 
 function gbBukaProfilingSiswa(id){
@@ -3648,6 +3651,9 @@ function gbLoadProfilingForm(){
     google.script.run.withSuccessHandler(d=>{
       if(!d){ wrap.innerHTML = '<p class="muted">Data siswa tidak ditemukan.</p>'; return; }
       gbRenderProfilingForm(d.siswa, d.profil, PROFILING_SARAN_CACHE);
+    }).withFailureHandler(err=>{
+      wrap.innerHTML = '<p class="muted">Gagal memuat data.</p>';
+      showToast('Gagal memuat profil: '+err.message, 'err');
     }).getProfilingSiswa(id);
   };
   if(PROFILING_SARAN_CACHE){ loadForm(); }
@@ -3666,6 +3672,9 @@ function gbLoadProfilingForm(){
       gbFillDatalist('dl-mapel', saran.mapel);
       gbFillDatalist('dl-hubungan-teman', saran.hubunganTeman);
       loadForm();
+    }).withFailureHandler(err=>{
+      wrap.innerHTML = '<p class="muted">Gagal memuat data.</p>';
+      showToast('Gagal memuat saran: '+err.message, 'err');
     }).getSaranProfiling();
   }
 }
