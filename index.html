@@ -2701,6 +2701,10 @@ function logout(){
   clearSession();
   document.getElementById('inp-username').value='';
   document.getElementById('inp-password').value='';
+  const errEl = document.getElementById('login-error');
+  if(errEl) errEl.textContent = '';
+  setStaffRole('GURUBK'); // reset subrole ke default sebelum tab role di-reset
+  setLoginRole('SISWA');  // reset tab & LOGIN_ROLE ke default, biar login berikutnya tidak salah role tanpa refresh
   switchView('view-login');
 }
 
