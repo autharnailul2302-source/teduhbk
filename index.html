@@ -779,6 +779,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
         <select id="filter-status-siswa" class="pagesize-select" onchange="gbLoadSiswaList()">
           <option value="AKTIF">Aktif</option>
           <option value="LULUS">Alumni (Lulus)</option>
+          <option value="MUTASI">Mutasi Keluar</option>
           <option value="SEMUA">Semua Status</option>
         </select>
         <input type="text" id="search-siswa" placeholder="Cari nama..." oninput="gbLoadSiswaList()">
@@ -1597,6 +1598,23 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
     <div style="display:flex;gap:8px;margin-top:10px;">
       <button class="btn btn-outline btn-block" onclick="closeModal('modal-edit-siswa')">Batal</button>
       <button class="btn btn-primary btn-block" onclick="submitEditSiswa()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MUTASI KELUAR -->
+<div class="modal-bg" id="modal-mutasi-siswa">
+  <div class="modal">
+    <h3>🚸 Mutasi Keluar</h3>
+    <input type="hidden" id="mutasi-id">
+    <p class="muted small">Siswa: <b id="mutasi-nama-siswa">-</b></p>
+    <p class="muted small">Status siswa akan diubah jadi <b>Mutasi Keluar</b>. Data (biodata, profiling, riwayat konseling, dst) tetap tersimpan untuk arsip, tapi siswa tidak akan muncul lagi di daftar aktif dan tidak bisa login.</p>
+    <div class="field"><label>Keterangan (sekolah tujuan / alasan, opsional)</label>
+      <textarea id="mutasi-keterangan" rows="3" placeholder="Contoh: Pindah ke SMP Negeri 2 Lamongan karena ikut orang tua tugas"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="btn btn-outline btn-block" onclick="closeModal('modal-mutasi-siswa')">Batal</button>
+      <button class="btn btn-danger btn-block" onclick="submitMutasiKeluar()">Ya, Mutasikan Keluar</button>
     </div>
   </div>
 </div>
@@ -3717,13 +3735,17 @@ function gbRenderSiswaTable(resetPage){
     '<td>'+s.NIS+'</td><td>'+s.Nama+'</td><td>'+s.Kelas+'</td>'+
     '<td>'+(s.StatusIsi==='SUDAH' ? '<span class="badge badge-green">AKPD ✓</span>' : '<span class="badge badge-red">AKPD ✗</span>')+' '+
       (s.StatusSosio==='SUDAH' ? '<span class="badge badge-green">Sosio ✓</span>' : '<span class="badge badge-red">Sosio ✗</span>')+
-      (s.StatusLulus==='LULUS' ? ' <span class="badge badge-green">🎓 Lulus'+(s.TahunLulus ? ' '+s.TahunLulus : '')+'</span>' : '')+'</td>'+
+      (s.StatusLulus==='LULUS' ? ' <span class="badge badge-green">🎓 Lulus'+(s.TahunLulus ? ' '+s.TahunLulus : '')+'</span>' : '')+
+      (s.StatusLulus==='MUTASI' ? ' <span class="badge badge-red">🚸 Mutasi Keluar'+(s.TglMutasi ? ' '+s.TglMutasi : '')+'</span>' : '')+'</td>'+
     '<td>'+
       '<button class="btn btn-sm btn-outline" onclick="gbOpenEditSiswa(\''+s.ID+'\')">✏️ Edit</button> '+
       '<button class="btn btn-sm btn-outline" onclick="gbBukaRiwayatSiswa(\''+s.ID+'\')">📋 Riwayat</button> '+
       '<button class="btn btn-sm btn-outline" onclick="gbBukaProfilingSiswa(\''+s.ID+'\')">📝 Profiling</button> '+
       (s.StatusIsi==='SUDAH' && s.Terkunci!=='BUKA' ? '<button class="btn btn-sm btn-outline" onclick="gbBukaAkses(\''+s.ID+'\')">🔓 AKPD</button> ' : '')+
       (s.StatusSosio==='SUDAH' && s.TerkunciSosio!=='BUKA' ? '<button class="btn btn-sm btn-outline" onclick="gbBukaAksesSosio(\''+s.ID+'\')">🔓 Sosio</button> ' : '')+
+      (s.StatusLulus==='MUTASI'
+        ? '<button class="btn btn-sm btn-outline" onclick="gbBatalkanMutasi(\''+s.ID+'\')">↩️ Batalkan Mutasi</button> '
+        : '<button class="btn btn-sm btn-outline" onclick="gbBukaMutasiKeluar(\''+s.ID+'\', \''+(s.Nama||'').replace(/'/g,"\\'")+'\')">🚸 Mutasi Keluar</button> ')+
       '<button class="btn btn-sm btn-danger" onclick="gbHapusSiswa(\''+s.ID+'\')">Hapus</button>'+
     '</td></tr>'
   ).join('') || '<tr><td colspan="6" class="muted" style="text-align:center;padding:24px;">Belum ada data siswa.</td></tr>';
@@ -4187,6 +4209,31 @@ function gbBukaAksesSosio(id){
 function gbHapusSiswa(id){
   if(!confirm('Hapus data siswa ini beserta jawabannya?')) return;
   google.script.run.withSuccessHandler(()=>{ showToast('Siswa dihapus.', 'ok'); gbLoadSiswaList(); }).hapusSiswa(id);
+}
+
+function gbBukaMutasiKeluar(id, nama){
+  document.getElementById('mutasi-id').value = id;
+  document.getElementById('mutasi-nama-siswa').textContent = nama || '-';
+  document.getElementById('mutasi-keterangan').value = '';
+  openModal('modal-mutasi-siswa');
+}
+
+function submitMutasiKeluar(){
+  const id = document.getElementById('mutasi-id').value;
+  const keterangan = document.getElementById('mutasi-keterangan').value.trim();
+  google.script.run.withSuccessHandler(()=>{
+    showToast('Siswa dipindah ke status Mutasi Keluar.', 'ok');
+    closeModal('modal-mutasi-siswa');
+    gbLoadSiswaList();
+  }).withFailureHandler(err=> showToast('Gagal: '+err.message, 'err')).mutasiSiswaKeluar(id, keterangan);
+}
+
+function gbBatalkanMutasi(id){
+  if(!confirm('Batalkan status mutasi keluar siswa ini? Siswa akan aktif kembali.')) return;
+  google.script.run.withSuccessHandler(()=>{
+    showToast('Mutasi dibatalkan, siswa aktif kembali.', 'ok');
+    gbLoadSiswaList();
+  }).withFailureHandler(err=> showToast('Gagal: '+err.message, 'err')).batalkanMutasiSiswa(id);
 }
 
 function openModalTambahSiswa(){ openModal('modal-tambah-siswa'); }
