@@ -6846,7 +6846,7 @@ function ksLoadSiswa(){
       h += '</tbody></table>';
       wrap.innerHTML = h;
       document.getElementById('ks-siswa-count').textContent = list.length + ' siswa';
-    }).withFailureHandler(()=>{ wrap.innerHTML = '<p class="small" style="color:var(--red);">Gagal memuat status profiling.</p>'; }).getSiswaIdsSudahProfiling();
+    }).withFailureHandler(err=>{ wrap.innerHTML = '<p class="small" style="color:var(--red);">Gagal memuat status profiling: '+err.message+'</p>'; }).getSiswaIdsSudahProfiling();
   }).withFailureHandler(err=>{ wrap.innerHTML = '<p class="small" style="color:var(--red);">Gagal memuat: '+err.message+'</p>'; }).getDaftarSiswa(kelas, status);
 }
 
