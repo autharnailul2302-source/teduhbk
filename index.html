@@ -2233,6 +2233,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
         </div>
         <div class="small muted" id="ks-laporan-count" style="margin:10px 0 0;">-</div>
         <div id="ks-laporan-table" style="margin-top:10px;overflow-x:auto;"><p class="muted small">Memuat...</p></div>
+        <div id="ks-laporan-pager" style="margin-top:14px;display:flex;gap:10px;align-items:center;justify-content:flex-end;"></div>
       </div>
     </div>
   </div>
@@ -6956,26 +6957,62 @@ function _ksEsc(v){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+const KS_LAPORAN_PAGE_SIZE = 10;
+let _ksLaporanData = [];
+let _ksLaporanPage = 1;
+
 function ksLoadLaporan(){
   const jenis = document.getElementById('ks-jenis-laporan').value;
   const cfg = KS_LAPORAN_TYPES[jenis];
   const wrap = document.getElementById('ks-laporan-table');
   const countEl = document.getElementById('ks-laporan-count');
+  const pagerEl = document.getElementById('ks-laporan-pager');
   wrap.innerHTML = '<p class="muted small">Memuat...</p>';
   countEl.textContent = '-';
+  pagerEl.innerHTML = '';
   google.script.run
     .withSuccessHandler(list=>{
-      if(!list || !list.length){ wrap.innerHTML = '<p class="muted small">Belum ada data.</p>'; countEl.textContent = '0 data'; return; }
-      let h = '<table><thead><tr>' + cfg.cols.map(c=>'<th>'+c[1]+'</th>').join('') + '</tr></thead><tbody>';
-      list.forEach(r=>{
-        h += '<tr>' + cfg.cols.map(c=>'<td>'+_ksEsc(r[c[0]])+'</td>').join('') + '</tr>';
-      });
-      h += '</tbody></table>';
-      wrap.innerHTML = h;
-      countEl.textContent = list.length + ' data';
+      _ksLaporanData = list || [];
+      _ksLaporanPage = 1;
+      if(!_ksLaporanData.length){ wrap.innerHTML = '<p class="muted small">Belum ada data.</p>'; countEl.textContent = '0 data'; return; }
+      ksRenderLaporanPage();
     })
     .withFailureHandler(err=>{ wrap.innerHTML = '<p class="small" style="color:var(--red);">Gagal memuat: '+err.message+'</p>'; })
     [cfg.fn]();
+}
+
+function ksRenderLaporanPage(){
+  const jenis = document.getElementById('ks-jenis-laporan').value;
+  const cfg = KS_LAPORAN_TYPES[jenis];
+  const wrap = document.getElementById('ks-laporan-table');
+  const countEl = document.getElementById('ks-laporan-count');
+  const pagerEl = document.getElementById('ks-laporan-pager');
+  const total = _ksLaporanData.length;
+  const totalPages = Math.max(1, Math.ceil(total / KS_LAPORAN_PAGE_SIZE));
+  if(_ksLaporanPage > totalPages) _ksLaporanPage = totalPages;
+  if(_ksLaporanPage < 1) _ksLaporanPage = 1;
+
+  const start = (_ksLaporanPage - 1) * KS_LAPORAN_PAGE_SIZE;
+  const pageRows = _ksLaporanData.slice(start, start + KS_LAPORAN_PAGE_SIZE);
+
+  let h = '<table><thead><tr>' + cfg.cols.map(c=>'<th>'+c[1]+'</th>').join('') + '</tr></thead><tbody>';
+  pageRows.forEach(r=>{
+    h += '<tr>' + cfg.cols.map(c=>'<td>'+_ksEsc(r[c[0]])+'</td>').join('') + '</tr>';
+  });
+  h += '</tbody></table>';
+  wrap.innerHTML = h;
+  countEl.textContent = total + ' data' + (totalPages > 1 ? ' &middot; Halaman ' + _ksLaporanPage + ' dari ' + totalPages : '');
+
+  if(totalPages <= 1){ pagerEl.innerHTML = ''; return; }
+  pagerEl.innerHTML =
+    '<button class="btn btn-sm" '+(_ksLaporanPage<=1?'disabled':'')+' onclick="ksGotoLaporanPage(-1)">&larr; Sebelumnya</button>' +
+    '<span class="small muted">Halaman '+_ksLaporanPage+' / '+totalPages+'</span>' +
+    '<button class="btn btn-sm" '+(_ksLaporanPage>=totalPages?'disabled':'')+' onclick="ksGotoLaporanPage(1)">Selanjutnya &rarr;</button>';
+}
+
+function ksGotoLaporanPage(delta){
+  _ksLaporanPage += delta;
+  ksRenderLaporanPage();
 }
 
 /*************************************************************
