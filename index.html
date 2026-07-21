@@ -2115,7 +2115,10 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
       </div>
     </div>
     <div class="nav-scroll">
-    <button class="nav-item active">📊 Statistik Sekolah</button>
+    <button class="nav-item active" data-tab="ks-dashboard" onclick="ksShowTab('ks-dashboard')">📊 Statistik Sekolah</button>
+    <button class="nav-item" data-tab="ks-siswa" onclick="ksShowTab('ks-siswa')">👥 Data Siswa</button>
+    <button class="nav-item" data-tab="ks-profiling" onclick="ksShowTab('ks-profiling')">📝 Profiling Siswa</button>
+    <button class="nav-item" data-tab="ks-laporan" onclick="ksShowTab('ks-laporan')">📁 Laporan &amp; Kegiatan BK</button>
     </div>
   </div>
   <div class="main">
@@ -2141,6 +2144,7 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
         </button>
       </div>
     </div>
+    <div id="ks-dashboard" class="tab-panel">
     <div class="topbar">
       <h2>Dashboard Kepala Sekolah</h2>
       <button class="btn btn-teal btn-sm" onclick="kepsekDownloadLaporan()">⬇️ Download Laporan (semua kelas)</button>
@@ -2166,6 +2170,69 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
       <div class="card">
         <h3>Status Pengisian per Kelas</h3>
         <div id="ks-chart-kelas" style="margin-top:14px;"></div>
+      </div>
+    </div>
+    </div>
+
+    <div id="ks-siswa" class="tab-panel" style="display:none;">
+      <div class="topbar"><h2>Data Siswa</h2></div>
+      <p class="muted small" style="margin-top:-14px;margin-bottom:18px;">Daftar siswa beserta status pengisian AKPD &amp; Profiling (read-only).</p>
+      <div class="card">
+        <div class="grid grid-2" style="max-width:520px;">
+          <div class="field"><label>Kelas</label>
+            <select id="ks-siswa-kelas" onchange="ksLoadSiswa()"><option value="SEMUA">Semua Kelas</option></select>
+          </div>
+          <div class="field"><label>Status</label>
+            <select id="ks-siswa-status" onchange="ksLoadSiswa()">
+              <option value="AKTIF">Aktif</option>
+              <option value="LULUS">Alumni (Lulus)</option>
+              <option value="MUTASI">Mutasi Keluar</option>
+              <option value="SEMUA">Semua Status</option>
+            </select>
+          </div>
+        </div>
+        <div class="small muted" id="ks-siswa-count" style="margin:10px 0 0;">-</div>
+        <div id="ks-siswa-table" style="margin-top:10px;overflow-x:auto;"><p class="muted small">Memuat...</p></div>
+      </div>
+    </div>
+
+    <div id="ks-profiling" class="tab-panel" style="display:none;">
+      <div class="topbar"><h2>Profiling Siswa</h2></div>
+      <p class="muted small" style="margin-top:-14px;margin-bottom:18px;">Lihat hasil profiling &amp; asesmen mendalam per siswa yang sudah diisi Guru BK (read-only).</p>
+      <div class="card">
+        <div class="grid grid-2" style="max-width:520px;">
+          <div class="field"><label>Kelas</label>
+            <select id="ks-prof-kelas" onchange="ksLoadProfilingSelect()"><option value="SEMUA">Semua Kelas</option></select>
+          </div>
+          <div class="field"><label>Pilih Siswa</label>
+            <select id="ks-prof-siswa" onchange="ksLoadProfilingView()"><option value="">— Pilih siswa —</option></select>
+          </div>
+        </div>
+      </div>
+      <div id="ks-profiling-content" style="margin-top:12px;"><p class="muted small">Pilih siswa dulu untuk melihat profilnya.</p></div>
+    </div>
+
+    <div id="ks-laporan" class="tab-panel" style="display:none;">
+      <div class="topbar">
+        <h2>Laporan &amp; Kegiatan BK</h2>
+      </div>
+      <p class="muted small" style="margin-top:-14px;margin-bottom:18px;">Semua laporan dan catatan kegiatan yang diisi Guru BK bisa dipantau di sini (read-only).</p>
+      <div class="card">
+        <div class="field" style="max-width:340px;">
+          <label>Jenis Laporan</label>
+          <select id="ks-jenis-laporan" onchange="ksLoadLaporan()">
+            <option value="konseling">Daftar Konseling</option>
+            <option value="anekdot">Catatan Anekdot</option>
+            <option value="observasi">Observasi</option>
+            <option value="eatl">Evaluasi &amp; Tindak Lanjut</option>
+            <option value="mingguan">Laporan Mingguan</option>
+            <option value="bulanan">Laporan Bulanan</option>
+            <option value="tahunan">Laporan Tahunan</option>
+            <option value="homevisit">Kunjungan Rumah (Home Visit)</option>
+          </select>
+        </div>
+        <div class="small muted" id="ks-laporan-count" style="margin:10px 0 0;">-</div>
+        <div id="ks-laporan-table" style="margin-top:10px;overflow-x:auto;"><p class="muted small">Memuat...</p></div>
       </div>
     </div>
   </div>
@@ -6728,6 +6795,12 @@ function enterKepsekPortal(){
   document.getElementById('ks-name-badge').textContent = CURRENT.nama || 'Kepala Sekolah';
   setTopnavAvatar('tn-avatar-kepsek', CURRENT.nama);
   maybeShowWelcome('KEPSEK');
+  ksShowTab('ks-dashboard');
+  google.script.run.withSuccessHandler(list=>{
+    const opts = list.map(k=>'<option value="'+k.NamaKelas+'">'+k.NamaKelas+'</option>').join('');
+    document.getElementById('ks-siswa-kelas').innerHTML = '<option value="SEMUA">Semua Kelas</option>' + opts;
+    document.getElementById('ks-prof-kelas').innerHTML = '<option value="SEMUA">Semua Kelas</option>' + opts;
+  }).getDaftarKelas();
   google.script.run.withSuccessHandler(d=>{
     document.getElementById('ks-jumlah').textContent = d.jumlahSiswa;
     document.getElementById('ks-sudah').textContent = d.sudahIsi;
@@ -6738,7 +6811,171 @@ function enterKepsekPortal(){
   }).getDashboardData();
 }
 function kepsekDownloadLaporan(){
-  showToast('Fitur unduh laporan gabungan — gunakan menu Rekap Kelas & Laporan pada akun Guru BK untuk laporan per kelas.', 'ok');
+  showToast('Menyiapkan laporan semua kelas...', 'ok');
+  google.script.run.withSuccessHandler(res=>{
+    if(res.success) window.open(res.downloadUrl, '_blank');
+    else showToast('Gagal: '+res.message, 'err');
+  }).withFailureHandler(err=> showToast('Gagal: '+err.message, 'err')).buatLaporanPDFSemuaKelas();
+}
+
+function ksShowTab(tab){
+  document.querySelectorAll('#view-kepsek .tab-panel').forEach(p=>p.style.display='none');
+  document.getElementById(tab).style.display='block';
+  document.querySelectorAll('#view-kepsek .nav-item[data-tab]').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  if(tab === 'ks-laporan') ksLoadLaporan();
+  else if(tab === 'ks-siswa') ksLoadSiswa();
+  else if(tab === 'ks-profiling') ksLoadProfilingSelect();
+}
+
+function ksLoadSiswa(){
+  const kelas = document.getElementById('ks-siswa-kelas').value;
+  const status = document.getElementById('ks-siswa-status').value;
+  const wrap = document.getElementById('ks-siswa-table');
+  wrap.innerHTML = '<p class="muted small">Memuat...</p>';
+  google.script.run.withSuccessHandler(list=>{
+    google.script.run.withSuccessHandler(profilIds=>{
+      const sudahProfil = {}; profilIds.forEach(id=> sudahProfil[String(id)] = true);
+      if(!list.length){ wrap.innerHTML = '<p class="muted small">Belum ada data siswa.</p>'; document.getElementById('ks-siswa-count').textContent = '0 siswa'; return; }
+      let h = '<table><thead><tr><th>Nama</th><th>NIS</th><th>Kelas</th><th>JK</th><th>Status Angket</th><th>Status Profiling</th></tr></thead><tbody>';
+      list.forEach(s=>{
+        h += '<tr><td>'+_ksEsc(s.Nama)+'</td><td>'+_ksEsc(s.NIS)+'</td><td>'+_ksEsc(s.Kelas)+'</td><td>'+_ksEsc(s.JK)+'</td>'+
+          '<td>'+(s.StatusIsi==='SUDAH' ? '<span class="badge badge-green">Sudah</span>' : '<span class="badge badge-red">Belum</span>')+'</td>'+
+          '<td>'+(sudahProfil[String(s.ID)] ? '<span class="badge badge-green">Sudah</span>' : '<span class="badge badge-red">Belum</span>')+'</td>'+
+          '</tr>';
+      });
+      h += '</tbody></table>';
+      wrap.innerHTML = h;
+      document.getElementById('ks-siswa-count').textContent = list.length + ' siswa';
+    }).withFailureHandler(()=>{ wrap.innerHTML = '<p class="small" style="color:var(--red);">Gagal memuat status profiling.</p>'; }).getSiswaIdsSudahProfiling();
+  }).withFailureHandler(err=>{ wrap.innerHTML = '<p class="small" style="color:var(--red);">Gagal memuat: '+err.message+'</p>'; }).getDaftarSiswa(kelas, status);
+}
+
+function ksLoadProfilingSelect(){
+  const kelas = document.getElementById('ks-prof-kelas').value;
+  google.script.run.withSuccessHandler(list=>{
+    const sel = document.getElementById('ks-prof-siswa');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— Pilih siswa —</option>' +
+      list.map(s=> '<option value="'+s.ID+'">'+s.Nama+' ('+s.Kelas+')</option>').join('');
+    if(current && list.some(s=>String(s.ID)===current)){ sel.value = current; } 
+    else document.getElementById('ks-profiling-content').innerHTML = '<p class="muted small">Pilih siswa dulu untuk melihat profilnya.</p>';
+  }).withFailureHandler(err=> showToast('Gagal memuat daftar siswa: '+err.message, 'err')).getDaftarSiswa(kelas, 'SEMUA');
+}
+
+function ksLoadProfilingView(){
+  const id = document.getElementById('ks-prof-siswa').value;
+  const wrap = document.getElementById('ks-profiling-content');
+  if(!id){ wrap.innerHTML = '<p class="muted small">Pilih siswa dulu untuk melihat profilnya.</p>'; return; }
+  wrap.innerHTML = '<p class="muted small">Memuat...</p>';
+  google.script.run.withSuccessHandler(d=>{
+    if(!d){ wrap.innerHTML = '<p class="muted small">Data siswa tidak ditemukan.</p>'; return; }
+    ksRenderProfilingView(d.siswa, d.profil);
+  }).withFailureHandler(err=>{ wrap.innerHTML = '<p class="muted small">Gagal memuat data.</p>'; showToast('Gagal: '+err.message, 'err'); }).getProfilingSiswa(id);
+}
+
+function ksField(label, val){
+  return '<div style="margin-bottom:8px;"><div class="small muted">'+label+'</div><div>'+_ksEsc(val)+'</div></div>';
+}
+function ksRenderProfilingView(siswa, profil){
+  const wrap = document.getElementById('ks-profiling-content');
+  if(!profil){
+    wrap.innerHTML = '<div class="card"><h3 style="margin-top:0;">'+siswa.Nama+' <span class="small muted">('+siswa.NIS+' &middot; '+siswa.Kelas+')</span></h3>'+
+      '<p class="muted small">Siswa ini belum mengisi/belum diisikan data profiling.</p></div>';
+    return;
+  }
+  const p = profil;
+  wrap.innerHTML =
+    '<div class="card"><h3 style="margin-top:0;">'+siswa.Nama+' <span class="small muted">('+siswa.NIS+' &middot; '+siswa.Kelas+')</span></h3>'+
+      '<p class="small muted">Terakhir diperbarui: '+(p.TglUpdate||'-')+'</p></div>'+
+
+    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">I. Identitas &amp; Kesehatan</h3>'+
+      '<div class="grid grid-2">'+
+        ksField('NISN', p.NISN)+ksField('Asal Sekolah', p.AsalSekolah)+
+        ksField('Nama Panggilan', p.NamaPanggilan)+ksField('Tempat, Tanggal Lahir', (p.TempatLahir||'-')+', '+(p.TanggalLahir||'-'))+
+        ksField('Agama', p.Agama)+ksField('Alamat Rumah', p.AlamatRumah)+
+        ksField('No HP Siswa', p.NoHPSiswa)+ksField('Riwayat Penyakit', p.RiwayatPenyakit)+
+        ksField('Disabilitas', p.Disabilitas)+ksField('Kondisi Kesehatan', p.KondisiKesehatan)+
+      '</div></div>'+
+
+    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">II. Data Orang Tua / Wali</h3>'+
+      '<div class="grid grid-2">'+
+        ksField('Nama Ayah', p.NamaAyah)+ksField('Nama Ibu', p.NamaIbu)+
+        ksField('Pekerjaan Ayah', p.PekerjaanAyah)+ksField('Pekerjaan Ibu', p.PekerjaanIbu)+
+        ksField('Pendidikan Ayah', p.PendidikanAyah)+ksField('Pendidikan Ibu', p.PendidikanIbu)+
+        ksField('Kontak Ayah', p.KontakAyah)+ksField('Kontak Ibu', p.KontakIbu)+
+        ksField('Status Pernikahan Ortu', p.StatusPernikahanOrtu)+ksField('Hubungan Siswa-Ortu', p.HubunganSiswaOrtu)+
+      '</div></div>'+
+
+    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">III. Profiling Kepribadian (Psikologis &amp; Emosional)</h3>'+
+      '<div class="grid grid-2">'+
+        ksField('Tipe Kepribadian', p.TipeKepribadian)+ksField('Stabilitas Emosi', p.StabilitasEmosi)+
+        ksField('Penyesuaian Sosial', p.PenyesuaianSosial)+ksField('Tingkat Kepercayaan Diri', p.TingkatKepercayaanDiri)+
+      '</div>'+
+      '<div class="grid grid-2">'+
+        ksField('Kekuatan Karakter', [p.KekuatanKarakter1,p.KekuatanKarakter2].filter(Boolean).join('; '))+
+        ksField('Perlu Dikembangkan', [p.PerluDikembangkan1,p.PerluDikembangkan2].filter(Boolean).join('; '))+
+      '</div></div>'+
+
+    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">IV. Minat, Gaya Belajar &amp; Akademik</h3>'+
+      '<div class="grid grid-2">'+
+        ksField('Gaya Belajar', p.GayaBelajar)+ksField('Sifat / Karakter', p.SifatKarakter)+
+        ksField('Bakat / Minat', p.BakatMinat)+ksField('Cita-cita', p.CitaCita)+
+        ksField('Prestasi', p.Prestasi)+ksField('Hubungan Teman Sebaya', p.HubunganTemanSebaya)+
+        ksField('Mapel Disukai', p.MapelDisukai)+ksField('Mapel Sulit', p.MapelSulit)+
+      '</div></div>'+
+
+    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">V. Komponen Layanan BK</h3>'+
+      '<div class="grid grid-2">'+
+        ksField('Masalah Pribadi', [p.MasalahPribadi,p.MasalahPribadiLainnya].filter(Boolean).join('; '))+
+        ksField('Masalah Sosial', [p.MasalahSosial,p.MasalahSosialLainnya].filter(Boolean).join('; '))+
+        ksField('Hambatan Belajar', p.HambatanBelajar)+ksField('Rencana Kelanjutan Studi', p.RencanaKelanjutanStudi)+
+        ksField('Minat Ekstrakurikuler', p.MinatEkstrakurikuler)+
+      '</div></div>'+
+
+    '<div class="card" style="margin-top:12px;"><h3 style="margin-top:0;">VI. Catatan Kasus / Permasalahan</h3>'+
+      '<p>'+_ksEsc(p.CatatanKasus)+'</p></div>';
+}
+
+/** Konfigurasi tampilan tiap jenis laporan BK: fungsi backend (read-only, tanpa filter)
+ *  + kolom mana saja yang ditampilkan ke Kepala Sekolah. */
+const KS_LAPORAN_TYPES = {
+  konseling: { fn:'getDaftarKonseling', cols:[['TanggalPelaksanaan','Tanggal'],['Layanan','Layanan'],['NamaSiswa','Nama Siswa'],['Kelas','Kelas'],['Topik','Topik'],['StatusPenanganan','Status']] },
+  anekdot: { fn:'getDaftarAnekdot', cols:[['Tanggal','Tanggal'],['NamaSiswa','Nama Siswa'],['Kelas','Kelas'],['Topik','Topik'],['Deskripsi','Deskripsi']] },
+  observasi: { fn:'getDaftarObservasi', cols:[['TanggalPelaksanaan','Tanggal'],['NamaSiswa','Nama Siswa'],['Kelas','Kelas'],['TopikPermasalahan','Topik'],['HasilObservasi','Hasil']] },
+  eatl: { fn:'getDaftarEATL', cols:[['Tanggal','Tanggal'],['Kelas','Kelas'],['Komponen','Komponen'],['Layanan','Layanan'],['Materi','Materi'],['Hambatan','Hambatan'],['TindakLanjut','Tindak Lanjut']] },
+  mingguan: { fn:'getDaftarMingguan', cols:[['TanggalKegiatan','Tanggal'],['Kelas','Kelas'],['Bulan','Bulan'],['Minggu','Minggu'],['SasaranKegiatan','Sasaran'],['KegiatanLayanan','Kegiatan'],['HasilDicapai','Hasil']] },
+  bulanan: { fn:'getDaftarBulanan', cols:[['Bulan','Bulan'],['Kelas','Kelas'],['RencanaKegiatan','Rencana'],['SasaranKegiatan','Sasaran'],['TanggalPelaksanaan','Tgl Pelaksanaan'],['Pelaksanaan','Pelaksanaan']] },
+  tahunan: { fn:'getDaftarTahunan', cols:[['Kelas','Kelas'],['RencanaKegiatan','Rencana'],['SasaranKegiatan','Sasaran'],['TanggalPelaksanaan','Tgl Pelaksanaan'],['Pelaksanaan','Pelaksanaan']] },
+  homevisit: { fn:'getDaftarHomeVisit', cols:[['HariTanggal','Tanggal'],['NamaSiswa','Nama Siswa'],['TopikPermasalahan','Topik'],['TindakLanjut','Tindak Lanjut']] }
+};
+
+function _ksEsc(v){
+  if(v===undefined||v===null||v==='') return '-';
+  let s = String(v);
+  if(s.length > 160) s = s.substring(0,157) + '...';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function ksLoadLaporan(){
+  const jenis = document.getElementById('ks-jenis-laporan').value;
+  const cfg = KS_LAPORAN_TYPES[jenis];
+  const wrap = document.getElementById('ks-laporan-table');
+  const countEl = document.getElementById('ks-laporan-count');
+  wrap.innerHTML = '<p class="muted small">Memuat...</p>';
+  countEl.textContent = '-';
+  google.script.run
+    .withSuccessHandler(list=>{
+      if(!list || !list.length){ wrap.innerHTML = '<p class="muted small">Belum ada data.</p>'; countEl.textContent = '0 data'; return; }
+      let h = '<table><thead><tr>' + cfg.cols.map(c=>'<th>'+c[1]+'</th>').join('') + '</tr></thead><tbody>';
+      list.forEach(r=>{
+        h += '<tr>' + cfg.cols.map(c=>'<td>'+_ksEsc(r[c[0]])+'</td>').join('') + '</tr>';
+      });
+      h += '</tbody></table>';
+      wrap.innerHTML = h;
+      countEl.textContent = list.length + ' data';
+    })
+    .withFailureHandler(err=>{ wrap.innerHTML = '<p class="small" style="color:var(--red);">Gagal memuat: '+err.message+'</p>'; })
+    [cfg.fn]();
 }
 
 /*************************************************************
