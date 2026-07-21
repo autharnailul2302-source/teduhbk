@@ -723,6 +723,11 @@ textarea.field-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bo
       <div class="topbar">
         <h2>Dashboard Guru BK</h2>
         <div>
+          <span class="small muted" style="margin-right:8px;display:inline-flex;align-items:center;gap:4px;">
+            Tahun Ajaran:
+            <input id="gb-tahun-ajaran" style="width:110px;padding:5px 8px;font-size:13px;" placeholder="2026/2027">
+            <button class="btn btn-outline btn-sm" onclick="gbSimpanTahunAjaran()">Simpan</button>
+          </span>
           <label class="small muted" style="margin-right:8px;">
             <input type="checkbox" id="toggle-angket" onchange="gbToggleAngket()"> Angket dibuka untuk siswa
           </label>
@@ -3528,9 +3533,20 @@ function gbLoadDashboard(){
     document.getElementById('stat-tertinggi').textContent = d.kebutuhanTertinggi.length ? ASPEK_LABEL[d.kebutuhanTertinggi[0].aspek] : '-';
     document.getElementById('toggle-angket').checked = d.settings.angketDibuka;
     if(document.getElementById('toggle-sosio')) document.getElementById('toggle-sosio').checked = d.settings.sosioDibuka;
+    document.getElementById('gb-tahun-ajaran').value = d.settings.tahunAjaran;
     renderBarChart('chart-kebutuhan', d.kebutuhanTertinggi.map(k=>({label:ASPEK_LABEL[k.aspek], value:k.persen, color:ASPEK_COLOR[k.aspek]})));
     renderKelasChart('chart-per-kelas', d.perKelas);
   }).getDashboardData();
+}
+
+function gbSimpanTahunAjaran(){
+  const tahun = document.getElementById('gb-tahun-ajaran').value.trim();
+  if(!tahun){ showToast('Tahun ajaran tidak boleh kosong.', 'err'); return; }
+  google.script.run.withSuccessHandler(()=>{
+    showToast('Tahun ajaran diperbarui ke '+tahun+'.', 'ok');
+    const sub = document.getElementById('school-sub');
+    if(sub) sub.textContent = 'TeduhBK · ' + tahun;
+  }).withFailureHandler(err=> showToast('Gagal: '+err.message, 'err')).updateSetting('TahunAjaran', tahun);
 }
 
 function gbToggleAngket(){
