@@ -2820,6 +2820,23 @@ function setTopnavAvatar(elId, nama){
 const HARI_ID = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'];
 const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
+/** Ubah nilai tanggal dari server ('yyyy-MM-dd' atau ISO/Date apapun) jadi
+ *  format 'd MMMM yyyy' berbahasa Indonesia untuk ditampilkan di daftar.
+ *  Dibaca sebagai string 'yyyy-MM-dd' apa adanya (tanpa lewat new Date())
+ *  supaya TIDAK ikut kena geser zona waktu (UTC vs WIB). */
+function fmtTglIndo(v){
+  if(!v) return '';
+  const s = String(v);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m){
+    const y = m[1], mo = parseInt(m[2],10)-1, d = parseInt(m[3],10);
+    return d + ' ' + (BULAN_ID[mo] || '') + ' ' + y;
+  }
+  const d = new Date(s);
+  if(isNaN(d.getTime())) return s;
+  return d.getDate() + ' ' + BULAN_ID[d.getMonth()] + ' ' + d.getFullYear();
+}
+
 function updateTopnavClock(){
   const now = new Date();
   const tanggal = HARI_ID[now.getDay()] + ', ' + now.getDate() + ' ' + BULAN_ID[now.getMonth()] + ' ' + now.getFullYear();
@@ -4994,7 +5011,7 @@ function gbLoadObservasiList(){
         '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">'+
           '<div><span class="eatl-tag">'+(r.TopikPermasalahan||'-')+'</span><br>'+
           '<b>'+(r.NamaSiswa||'')+'</b> &middot; Kelas '+r.Kelas+' &middot; '+(r.Semester||'')+' '+(r.TahunAjaran||'')+
-          (r.TanggalPelaksanaan? ' &middot; '+r.TanggalPelaksanaan : '')+'</div>'+
+          (r.TanggalPelaksanaan? ' &middot; '+fmtTglIndo(r.TanggalPelaksanaan) : '')+'</div>'+
           '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+
             '<button class="btn btn-sm btn-outline" onclick="gbEditObservasi(\''+r.ID+'\')">✏️ Edit</button>'+
             '<button class="btn btn-sm btn-danger" onclick="gbHapusObservasi(\''+r.ID+'\')">Hapus</button>'+
@@ -5138,7 +5155,7 @@ function gbLoadKonselingList(){
           '<div><span class="eatl-tag">'+(r.Layanan||'-')+'</span> '+
           '<span class="badge '+(statusBadge[st]||'badge-red')+'">'+st+'</span><br>'+
           '<b>'+(r.Topik||'')+'</b> &middot; Kelas '+r.Kelas+' &middot; '+(r.Semester||'')+' '+(r.TahunAjaran||'')+
-          (r.TanggalPelaksanaan? ' &middot; '+r.TanggalPelaksanaan : '')+'</div>'+
+          (r.TanggalPelaksanaan? ' &middot; '+fmtTglIndo(r.TanggalPelaksanaan) : '')+'</div>'+
           '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+
             '<button class="btn btn-sm btn-outline" onclick="gbEditKonseling(\''+r.ID+'\')">✏️ Edit</button>'+
             '<button class="btn btn-sm btn-danger" onclick="gbHapusKonseling(\''+r.ID+'\')">Hapus</button>'+
@@ -5294,7 +5311,7 @@ function gbLoadMingguanList(){
           '<div><span class="eatl-tag">'+(r.KegiatanLayanan||'-')+'</span><br>'+
           '<b>'+(r.SasaranKegiatan||'')+'</b> &middot; Kelas '+r.Kelas+' &middot; '+(r.Semester||'')+' '+(r.TahunAjaran||'')+
           ' &middot; '+(r.Bulan||'')+' Minggu '+(r.Minggu||'')+
-          (r.TanggalKegiatan? ' &middot; '+r.TanggalKegiatan : '')+'</div>'+
+          (r.TanggalKegiatan? ' &middot; '+fmtTglIndo(r.TanggalKegiatan) : '')+'</div>'+
           '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+
             '<button class="btn btn-sm btn-outline" onclick="gbEditMingguan(\''+r.ID+'\')">✏️ Edit</button>'+
             '<button class="btn btn-sm btn-danger" onclick="gbHapusMingguan(\''+r.ID+'\')">Hapus</button>'+
@@ -5441,7 +5458,7 @@ function gbLoadBulananList(){
           '<div><span class="eatl-tag">'+(r.RencanaKegiatan||'-')+'</span><br>'+
           '<b>'+(r.SasaranKegiatan||'')+'</b> &middot; Kelas '+r.Kelas+' &middot; '+(r.Semester||'')+' '+(r.TahunAjaran||'')+
           ' &middot; '+(r.Bulan||'')+
-          (r.TanggalPelaksanaan? ' &middot; '+r.TanggalPelaksanaan : '')+'</div>'+
+          (r.TanggalPelaksanaan? ' &middot; '+fmtTglIndo(r.TanggalPelaksanaan) : '')+'</div>'+
           '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+
             '<button class="btn btn-sm btn-outline" onclick="gbEditBulanan(\''+r.ID+'\')">✏️ Edit</button>'+
             '<button class="btn btn-sm btn-danger" onclick="gbHapusBulanan(\''+r.ID+'\')">Hapus</button>'+
@@ -5581,7 +5598,7 @@ function gbLoadTahunanList(){
         '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">'+
           '<div><span class="eatl-tag">'+(r.RencanaKegiatan||'-')+'</span><br>'+
           '<b>'+(r.SasaranKegiatan||'')+'</b> &middot; Kelas '+r.Kelas+' &middot; '+(r.TahunAjaran||'')+
-          (r.TanggalPelaksanaan? ' &middot; '+r.TanggalPelaksanaan : '')+'</div>'+
+          (r.TanggalPelaksanaan? ' &middot; '+fmtTglIndo(r.TanggalPelaksanaan) : '')+'</div>'+
           '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+
             '<button class="btn btn-sm btn-outline" onclick="gbEditTahunan(\''+r.ID+'\')">✏️ Edit</button>'+
             '<button class="btn btn-sm btn-danger" onclick="gbHapusTahunan(\''+r.ID+'\')">Hapus</button>'+
